@@ -158,17 +158,50 @@ gemini2/
 │   └── health.py             # Health check endpoints
 ├── config/                    # Configuration settings
 │   ├── __init__.py
-│   └── settings.py           # Application settings
-└── README.md                  # This file
+│   └── settings.py        # Application settings
+├── frontend/                   # React frontend application
+│   ├── package.json          # Frontend dependencies
+│   ├── tailwind.config.js    # Tailwind CSS configuration
+│   ├── postcss.config.js     # PostCSS configuration
+│   ├── public/               # Static assets
+│   │   └── index.html        # HTML template
+│   └── src/                  # React source code
+│       ├── App.js            # Main App component
+│       ├── App.css           # Custom styles
+│       ├── index.js          # React entry point
+│       ├── index.css         # Global styles
+│       ├── components/       # Reusable components
+│       │   └── Navbar.js     # Navigation component
+│       ├── pages/            # Page components
+│       │   ├── Landing.js    # Landing page
+│       │   ├── Dashboard.js  # Dashboard page
+│       │   ├── CareerPath.js # Career paths page
+│       │   ├── Roadmap.js    # Roadmap page
+│       │   ├── Courses.js    # Courses page
+│       │   └── Settings.js   # Settings page
+│       ├── context/          # React Context
+│       │   └── AppContext.js # Global state management
+│       └── services/         # API services
+│           └── api.js        # Backend API integration
+└── README.md                 # This file
 ```
 
 ## Dependencies
 
+### Backend Dependencies
 - **fastapi**: Web framework for building APIs
 - **uvicorn**: ASGI server for running FastAPI
 - **google-cloud-aiplatform**: Google Cloud AI Platform client
 - **pydantic**: Data validation using Python type annotations
 - **python-multipart**: Support for multipart form data
+
+### Frontend Dependencies
+- **react**: JavaScript library for building user interfaces
+- **react-router-dom**: Declarative routing for React
+- **axios**: Promise-based HTTP client
+- **tailwindcss**: Utility-first CSS framework
+- **autoprefixer**: PostCSS plugin to parse CSS and add vendor prefixes
+- **postcss**: Tool for transforming CSS with JavaScript
 
 ## Error Handling
 
@@ -187,21 +220,74 @@ To modify CORS settings, update the `allow_origins` list in `main.py`.
 
 ## Development
 
-To run in development mode with auto-reload:
+### Backend Development
+
+To run the backend in development mode with auto-reload:
 
 ```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+
+# Run the server
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+### Frontend Development
+
+To run the frontend in development mode:
+
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
+The frontend will be available at `http://localhost:3000` and will automatically connect to the backend API.
+
+## Frontend Features
+
+The React frontend includes:
+
+### Pages
+- **Landing**: Input form for skills and expertise analysis
+- **Dashboard**: Overview of career analysis results
+- **Career Path**: Detailed view of all recommended career paths
+- **Roadmap**: Step-by-step career development guide
+- **Courses**: Curated learning resources and courses
+- **Settings**: User profile and application preferences
+
+### Key Features
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
+- **Global State Management**: React Context for data sharing across components
+- **API Integration**: Axios-based service for backend communication
+- **Error Handling**: Comprehensive error states and user feedback
+- **Loading States**: Visual feedback during API calls
+- **Navigation**: React Router for seamless page transitions
 
 ## Modular Architecture
 
 The project follows a clean, modular architecture:
 
+### Backend
 - **`models/`**: Contains all Pydantic models for request/response validation
 - **`services/`**: Contains business logic and external service integrations
 - **`routes/`**: Contains API route handlers organized by functionality
 - **`config/`**: Contains application settings and configuration
 - **`main.py`**: Application entry point that ties everything together
+
+### Frontend
+- **`components/`**: Reusable UI components
+- **`pages/`**: Page-level components for different routes
+- **`context/`**: React Context for global state management
+- **`services/`**: API service layer for backend communication
 
 This structure makes the codebase:
 - **Maintainable**: Easy to find and modify specific functionality

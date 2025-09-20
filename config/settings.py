@@ -1,0 +1,33 @@
+import os
+from typing import List
+
+class Settings:
+    """Application settings and configuration"""
+    
+    # API Configuration
+    API_TITLE: str = "Career Path Analyzer"
+    API_VERSION: str = "1.0.0"
+    API_DESCRIPTION: str = "A FastAPI backend service that uses Google's Vertex AI to analyze skills and generate career recommendations"
+    
+    # Server Configuration
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
+    
+    # CORS Configuration
+    ALLOWED_ORIGINS: List[str] = [
+        "http://localhost:3000",  # React development server
+        "http://127.0.0.1:3000",
+    ]
+    
+    # Google Cloud Configuration
+    GOOGLE_CLOUD_PROJECT: str = os.getenv("GOOGLE_CLOUD_PROJECT", "your-project-id")
+    
+    # AI Configuration
+    AI_MODEL_NAME: str = "gemini-1.0-pro"
+    
+    # Logging Configuration
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+
+# Global settings instance
+settings = Settings()

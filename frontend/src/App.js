@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Navbar from './components/Navbar';
+import ChatBot from './components/ChatBot';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import CareerPath from './pages/CareerPath';
@@ -30,6 +31,7 @@ function App() {
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </main>
+          <ChatBot />
         </div>
       </Router>
     </AppProvider>

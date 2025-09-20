@@ -164,6 +164,31 @@ export const careerAPI = {
     }
   },
 
+  // Chat endpoints
+  updateSkillsViaChat: async (message) => {
+    try {
+      const response = await api.post('/chat/update-skills', { message });
+      return response.data;
+    } catch (error) {
+      console.error('Chat update skills error:', error);
+      throw error;
+    }
+  },
+
+  // Skills endpoints
+  updateSkills: async (userId, message) => {
+    try {
+      const response = await api.post('/update-skills', {
+        user_id: userId,
+        message: message
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Update skills error:', error);
+      throw error;
+    }
+  },
+
   // Root endpoint
   getRoot: async () => {
     try {

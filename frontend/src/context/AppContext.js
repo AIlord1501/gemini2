@@ -25,6 +25,8 @@ const ActionTypes = {
   SET_ERROR: 'SET_ERROR',
   CLEAR_DATA: 'CLEAR_DATA',
   LOGOUT: 'LOGOUT',
+  UPDATE_USER_SKILLS: 'UPDATE_USER_SKILLS',
+  TRIGGER_REANALYSIS: 'TRIGGER_REANALYSIS',
 };
 
 // Reducer function
@@ -62,6 +64,27 @@ const appReducer = (state, action) => {
         user: action.payload,
         isAuthenticated: !!action.payload,
         loading: false,
+        error: null,
+        // Update skills in context when user is updated
+        userSkills: action.payload?.skills || state.userSkills,
+        userExpertise: action.payload?.expertise || state.userExpertise,
+      };
+    case ActionTypes.UPDATE_USER_SKILLS:
+      return {
+        ...state,
+        user: action.payload.user,
+        userSkills: action.payload.user?.skills || state.userSkills,
+        userExpertise: action.payload.user?.expertise || state.userExpertise,
+        // Clear previous AI response to trigger re-analysis
+        aiResponse: null,
+        loading: false,
+        error: null,
+      };
+    case ActionTypes.TRIGGER_REANALYSIS:
+      return {
+        ...state,
+        aiResponse: null,
+        loading: true,
         error: null,
       };
     case ActionTypes.SET_AUTHENTICATED:
@@ -163,6 +186,32 @@ export const AppProvider = ({ children }) => {
     dispatch({ type: ActionTypes.CLEAR_DATA });
   };
 
+  // New action for updating user skills from ChatBot
+  const updateUserSkills = (user) => {
+    dispatch({ type: ActionTypes.UPDATE_USER_SKILLS, payload: { user } });
+  };
+
+  // New action to trigger re-analysis when skills change
+  const triggerReanalysis = () => {
+    dispatch({ type: ActionTypes.TRIGGER_REANALYSIS });
+  };
+
+  // Auto re-analyze when skills change significantly
+  const autoReanalyze = async (newSkills, newExpertise) => {
+    if (newSkills && newExpertise && (newSkills !== state.userSkills || newExpertise !== state.userExpertise)) {
+      try {
+        setLoading(true);
+        const response = await careerAPI.analyzeCareer(newSkills, newExpertise);
+        setAIResponse(response);
+        setSkills(newSkills);
+        setExpertise(newExpertise);
+      } catch (error) {
+        console.error('Auto re-analysis failed:', error);
+        setError(error.message || 'Failed to update analysis');
+      }
+    }
+  };
+
   const value = {
     ...state,
     setSkills,
@@ -175,6 +224,9 @@ export const AppProvider = ({ children }) => {
     setError,
     clearData,
     logout,
+    updateUserSkills,
+    triggerReanalysis,
+    autoReanalyze,
   };
 
   return (

@@ -303,3 +303,202 @@ class AIService:
                 answer="Start with official documentation, build small projects, join communities, find mentors, and practice regularly with real-world scenarios."
             )
         ]
+    
+    def extract_skills_from_message(self, message: str, current_skills: str = "") -> Dict[str, Any]:
+        """Extract and merge skills from user message using Vertex AI"""
+        
+        prompt = f"""
+        A user has shared information about their learning or skills. Please extract any technical skills, technologies, programming languages, tools, or professional competencies mentioned.
+        
+        User message: "{message}"
+        Current skills: "{current_skills}"
+        
+        Please provide a JSON response with the following structure:
+        {{
+            "extracted_skills": ["skill1", "skill2", "skill3"],
+            "updated_skills": "merged and deduplicated list of all skills as a comma-separated string",
+            "bot_response": "A friendly response acknowledging what the user learned and encouraging them"
+        }}
+        
+        Rules:
+        1. Extract only actual skills, technologies, or competencies
+        2. Merge with existing skills, avoiding duplicates
+        3. Keep the response encouraging and supportive
+        4. If no new skills are found, return empty extracted_skills array but still provide a helpful response
+        """
+
+        try:
+            response = self.model.generate_content(prompt)
+            response_text = response.text
+            
+            # Try to find JSON in the response
+            start_idx = response_text.find('{')
+            end_idx = response_text.rfind('}') + 1
+            
+            if start_idx != -1 and end_idx != -1:
+                json_str = response_text[start_idx:end_idx]
+                return json.loads(json_str)
+            else:
+                # Fallback response
+                return self._create_fallback_skill_response(message, current_skills)
+                
+        except Exception as e:
+            print(f"Error extracting skills: {e}")
+            return self._create_fallback_skill_response(message, current_skills)
+    
+    def _create_fallback_skill_response(self, message: str, current_skills: str) -> Dict[str, Any]:
+        """Create a fallback response when AI skill extraction fails"""
+        return {
+            "extracted_skills": [],
+            "updated_skills": current_skills,
+            "bot_response": "Thanks for sharing! I'm here to help you track your learning journey. Feel free to tell me about any new skills, technologies, or courses you've been working on!"
+        }
+    
+    def extract_skills_with_levels(self, message: str) -> Dict[str, Any]:
+        """Extract skills and expertise levels from message using Vertex AI"""
+        
+        prompt = f"""
+        Extract all new skills and expertise levels mentioned in this message: "{message}"
+        
+        Return a JSON array with the following structure:
+        [
+          {{"skill": "skill name", "expertise_level": "beginner/intermediate/advanced/expert"}},
+          {{"skill": "skill name", "expertise_level": "beginner/intermediate/advanced/expert"}}
+        ]
+        
+        Rules:
+        1. Extract only actual technical skills, programming languages, tools, or professional competencies
+        2. Infer the expertise level from context (if someone "learned" something = beginner, "worked with" = intermediate, "mastered" = advanced, etc.)
+        3. If no level is mentioned, default to "beginner" for new learning, "intermediate" for general experience
+        4. Return empty array if no skills are found
+        5. Skills should be properly formatted (e.g., "JavaScript", "React", "Python", "SQL")
+        """
+
+        try:
+            response = self.model.generate_content(prompt)
+            response_text = response.text
+            
+            # Try to find JSON in the response
+            start_idx = response_text.find('[')
+            end_idx = response_text.rfind(']') + 1
+            
+            if start_idx != -1 and end_idx != -1:
+                json_str = response_text[start_idx:end_idx]
+                extracted_skills = json.loads(json_str)
+                return {"extracted_skills": extracted_skills}
+            else:
+                # Fallback if no valid JSON found
+                return self._extract_skills_fallback(message)
+                
+        except Exception as e:
+            print(f"Error extracting skills with levels: {e}")
+            return self._extract_skills_fallback(message)
+    
+    def _extract_skills_fallback(self, message: str) -> Dict[str, Any]:
+        """Fallback skill extraction when AI is not available"""
+        # Common technical skills and tools to look for
+        skill_patterns = {
+            # Programming Languages
+            'python': 'Python',
+            'javascript': 'JavaScript',
+            'java': 'Java',
+            'c#': 'C#',
+            'c++': 'C++',
+            'typescript': 'TypeScript',
+            'php': 'PHP',
+            'ruby': 'Ruby',
+            'go': 'Go',
+            'rust': 'Rust',
+            'swift': 'Swift',
+            'kotlin': 'Kotlin',
+            
+            # Frontend Technologies
+            'react': 'React',
+            'vue': 'Vue.js',
+            'angular': 'Angular',
+            'html': 'HTML',
+            'css': 'CSS',
+            'bootstrap': 'Bootstrap',
+            'tailwind': 'Tailwind CSS',
+            'sass': 'SASS',
+            'jquery': 'jQuery',
+            
+            # Backend Technologies
+            'node.js': 'Node.js',
+            'nodejs': 'Node.js',
+            'express': 'Express.js',
+            'django': 'Django',
+            'flask': 'Flask',
+            'spring': 'Spring',
+            'laravel': 'Laravel',
+            'rails': 'Ruby on Rails',
+            
+            # Databases
+            'sql': 'SQL',
+            'mysql': 'MySQL',
+            'postgresql': 'PostgreSQL',
+            'mongodb': 'MongoDB',
+            'sqlite': 'SQLite',
+            'redis': 'Redis',
+            'firestore': 'Firestore',
+            
+            # DevOps and Tools
+            'docker': 'Docker',
+            'kubernetes': 'Kubernetes',
+            'aws': 'AWS',
+            'azure': 'Azure',
+            'gcp': 'Google Cloud Platform',
+            'git': 'Git',
+            'jenkins': 'Jenkins',
+            'terraform': 'Terraform',
+            
+            # Machine Learning / AI
+            'machine learning': 'Machine Learning',
+            'tensorflow': 'TensorFlow',
+            'pytorch': 'PyTorch',
+            'pandas': 'Pandas',
+            'numpy': 'NumPy',
+            'scikit-learn': 'Scikit-learn',
+            
+            # Other
+            'api': 'API Development',
+            'rest': 'REST APIs',
+            'graphql': 'GraphQL',
+            'microservices': 'Microservices',
+            'agile': 'Agile',
+            'scrum': 'Scrum'
+        }
+        
+        message_lower = message.lower()
+        extracted_skills = []
+        
+        # Look for skill mentions in the message
+        for pattern, skill_name in skill_patterns.items():
+            if pattern in message_lower:
+                # Infer expertise level from context
+                expertise_level = 'beginner'  # default
+                
+                if any(word in message_lower for word in ['expert', 'mastered', 'advanced', 'proficient']):
+                    expertise_level = 'expert'
+                elif any(word in message_lower for word in ['experienced', 'worked with', 'using', 'good at']):
+                    expertise_level = 'intermediate'
+                elif any(word in message_lower for word in ['learned', 'learning', 'started', 'new to']):
+                    expertise_level = 'beginner'
+                elif any(word in message_lower for word in ['improved', 'better', 'advanced']):
+                    expertise_level = 'intermediate'
+                    
+                extracted_skills.append({
+                    'skill': skill_name,
+                    'expertise_level': expertise_level
+                })
+        
+        # Remove duplicates
+        seen = set()
+        unique_skills = []
+        for skill in extracted_skills:
+            skill_key = skill['skill'].lower()
+            if skill_key not in seen:
+                seen.add(skill_key)
+                unique_skills.append(skill)
+        
+        return {"extracted_skills": unique_skills}

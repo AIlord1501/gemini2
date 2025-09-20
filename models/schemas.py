@@ -104,3 +104,31 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     """Token data for validation"""
     email: Optional[str] = None
+
+class ChatMessage(BaseModel):
+    """Chat message model"""
+    message: str
+    user_id: Optional[str] = None
+
+class ChatResponse(BaseModel):
+    """Chat response model"""
+    bot_message: str
+    extracted_skills: List[str]
+    updated_skills: str
+    user: Optional[User] = None
+
+class UpdateSkillsRequest(BaseModel):
+    """Update skills request model"""
+    user_id: str
+    message: str
+
+class SkillExtraction(BaseModel):
+    """Individual skill extraction model"""
+    skill: str
+    expertise_level: str
+
+class UpdateSkillsResponse(BaseModel):
+    """Update skills response model"""
+    extracted_skills: List[SkillExtraction]
+    updated_skills_list: List[str]
+    user: Optional[User] = None

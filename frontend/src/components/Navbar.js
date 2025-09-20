@@ -21,6 +21,7 @@ const Navbar = () => {
     { path: '/roadmap', label: 'Roadmap', icon: '🗺️' },
     { path: '/courses', label: 'Courses', icon: '📚' },
     { path: '/mock-test', label: 'Mock Test', icon: '📝' },
+    { path: '/resources', label: 'Resources', icon: '📖' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];
 

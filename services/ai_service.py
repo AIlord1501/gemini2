@@ -169,7 +169,7 @@ class AIService:
         # If all APIs fail, return None to trigger static fallback
         print("⚠️ All AI services unavailable, using static fallback")
         return None
-    def generate_career_analysis(self, skills: str, expertise: str) -> Dict[str, Any]:
+    def generate_career_analysis(self, skills: str, expertise: str, topic: str = None) -> Dict[str, Any]:
         """Generate career analysis using available AI services with fallbacks"""
         
         prompt = f"""
@@ -256,14 +256,54 @@ class AIService:
         
         # Fallback to static response
         print("📊 Using enhanced static career analysis")
-        return self._create_enhanced_fallback_response(skills, expertise)
+        return self._create_enhanced_fallback_response(skills, expertise, topic)
     
-    def _create_enhanced_fallback_response(self, skills: str, expertise: str) -> Dict[str, Any]:
-        """Create an enhanced fallback response that adapts to user's skills"""
+    def _create_enhanced_fallback_response(self, skills: str, expertise: str, topic: str = None) -> Dict[str, Any]:
+        """Create an enhanced fallback response that adapts to user's skills and topic"""
         
         skills_lower = skills.lower()
+        topic_lower = topic.lower() if topic else ""
         
-        # Determine primary domain based on skills
+        # Determine primary domain based on topic first, then skills
+        primary_domain = None
+        
+        # If topic is specified, use it to determine domain
+        if topic and topic.lower() != 'all':
+            if topic_lower in ['ai', 'artificial intelligence', 'machine learning']:
+                primary_domain = 'ai_ml'
+            elif topic_lower in ['web development', 'web dev', 'frontend', 'backend']:
+                primary_domain = 'web_development'
+            elif topic_lower in ['data science', 'data analysis', 'analytics']:
+                primary_domain = 'data_science'
+            elif topic_lower in ['mobile development', 'mobile', 'app development']:
+                primary_domain = 'mobile_development'
+            elif topic_lower in ['devops', 'cloud', 'aws', 'docker']:
+                primary_domain = 'devops'
+            elif topic_lower in ['cybersecurity', 'security', 'infosec']:
+                primary_domain = 'cybersecurity'
+            elif topic_lower in ['design', 'ui/ux design', 'ui', 'ux']:
+                primary_domain = 'design'
+            elif topic_lower in ['blockchain', 'crypto', 'web3']:
+                primary_domain = 'blockchain'
+            elif topic_lower in ['game development', 'gamedev', 'gaming']:
+                primary_domain = 'game_development'
+        
+        # If no topic specified or topic not recognized, determine from skills
+        if not primary_domain:
+            if any(skill in skills_lower for skill in ['python', 'javascript', 'java', 'programming', 'coding', 'react', 'node']):
+                primary_domain = 'software_development'
+            elif any(skill in skills_lower for skill in ['data', 'analytics', 'sql', 'pandas', 'statistics', 'machine learning']):
+                primary_domain = 'data_science'
+            elif any(skill in skills_lower for skill in ['design', 'ui', 'ux', 'photoshop', 'figma', 'adobe']):
+                primary_domain = 'design'
+            elif any(skill in skills_lower for skill in ['marketing', 'social media', 'seo', 'content', 'advertising']):
+                primary_domain = 'marketing'
+            elif any(skill in skills_lower for skill in ['project management', 'agile', 'scrum', 'leadership']):
+                primary_domain = 'project_management'
+            else:
+                primary_domain = 'general_tech'
+        
+        # Get domain-specific career paths
         if any(skill in skills_lower for skill in ['python', 'javascript', 'java', 'programming', 'coding', 'react', 'node']):
             primary_domain = 'software_development'
         elif any(skill in skills_lower for skill in ['data', 'analytics', 'sql', 'pandas', 'statistics', 'machine learning']):
@@ -277,152 +317,289 @@ class AIService:
         else:
             primary_domain = 'general_tech'
         
-        # Get domain-specific responses
-        domain_responses = {
-            'software_development': {
-                'career_paths': [
+        return self._create_career_analysis_for_domain(primary_domain, skills, expertise)
+    
+    def _create_career_analysis_for_domain(self, domain: str, skills: str, expertise: str) -> Dict[str, Any]:
+        """Create career analysis based on domain"""
+        
+        if domain == 'software_development':
+            return {
+                "career_paths": [
                     {
-                        'title': 'Full Stack Developer',
-                        'description': 'Develop complete web applications from frontend to backend',
-                        'required_skills': ['JavaScript', 'React', 'Node.js', 'Databases', 'Git'],
-                        'salary_range': '$70,000 - $130,000',
-                        'growth_prospect': 'High - Strong demand for versatile developers'
+                        "title": "Software Engineer",
+                        "description": "Design and develop software applications, systems, and solutions.",
+                        "required_skills": ["Programming Languages", "Problem Solving", "Software Architecture", "Testing"],
+                        "salary_range": "$70,000 - $150,000",
+                        "growth_prospect": "High - Software engineering continues to be in high demand across all industries."
                     },
                     {
-                        'title': 'Software Engineer',
-                        'description': 'Design and develop software systems and applications',
-                        'required_skills': ['Programming Languages', 'Data Structures', 'System Design', 'Testing'],
-                        'salary_range': '$80,000 - $150,000',
-                        'growth_prospect': 'High - Technology sector continues to grow rapidly'
+                        "title": "Full Stack Developer",
+                        "description": "Work on both frontend and backend development of web applications.",
+                        "required_skills": ["JavaScript", "React/Vue", "Node.js", "Databases", "APIs"],
+                        "salary_range": "$65,000 - $130,000",
+                        "growth_prospect": "High - Full stack developers are versatile and highly sought after."
                     },
                     {
-                        'title': 'DevOps Engineer',
-                        'description': 'Bridge development and operations to streamline software delivery',
-                        'required_skills': ['Docker', 'Kubernetes', 'AWS/Cloud', 'CI/CD', 'Monitoring'],
-                        'salary_range': '$85,000 - $140,000',
-                        'growth_prospect': 'Very High - Essential for modern software delivery'
+                        "title": "DevOps Engineer",
+                        "description": "Bridge development and operations, focusing on automation and deployment.",
+                        "required_skills": ["Cloud Platforms", "CI/CD", "Docker", "Kubernetes", "Infrastructure as Code"],
+                        "salary_range": "$80,000 - $160,000",
+                        "growth_prospect": "Very High - DevOps practices are essential for modern software delivery."
                     }
                 ],
-                'selected_path': {
-                    'title': 'Full Stack Developer',
-                    'description': 'Based on your skills, becoming a Full Stack Developer offers the best opportunity to leverage your programming knowledge while building complete applications',
-                    'required_skills': ['JavaScript', 'React', 'Node.js', 'Databases', 'Git', 'API Development'],
-                    'salary_range': '$70,000 - $130,000',
-                    'growth_prospect': 'High - Full stack developers are highly sought after for their versatility'
-                }
-            },
-            'data_science': {
-                'career_paths': [
+                "selected_path": {
+                    "title": "Software Engineer",
+                    "description": "Based on your programming skills, software engineering offers the best growth opportunities and aligns with current market demand.",
+                    "required_skills": ["Programming Languages", "Problem Solving", "Software Architecture", "Testing"],
+                    "salary_range": "$70,000 - $150,000",
+                    "growth_prospect": "High - Software engineering continues to be in high demand across all industries."
+                },
+                "roadmap": [
                     {
-                        'title': 'Data Scientist',
-                        'description': 'Extract insights from data to drive business decisions',
-                        'required_skills': ['Python', 'Statistics', 'Machine Learning', 'SQL', 'Data Visualization'],
-                        'salary_range': '$90,000 - $160,000',
-                        'growth_prospect': 'Very High - Data-driven decision making is crucial'
+                        "step": 1,
+                        "title": "Master Programming Fundamentals",
+                        "description": "Strengthen your foundation in programming languages, data structures, and algorithms.",
+                        "duration": "2-3 months",
+                        "resources": ["LeetCode", "HackerRank", "Coursera algorithms courses"]
                     },
                     {
-                        'title': 'Data Analyst',
-                        'description': 'Analyze data to identify trends and create reports',
-                        'required_skills': ['SQL', 'Excel', 'Tableau/PowerBI', 'Statistics', 'Business Intelligence'],
-                        'salary_range': '$60,000 - $100,000',
-                        'growth_prospect': 'High - Every company needs data insights'
+                        "step": 2,
+                        "title": "Build Projects",
+                        "description": "Create 3-5 substantial projects demonstrating different skills and technologies.",
+                        "duration": "3-4 months",
+                        "resources": ["GitHub", "Personal portfolio website", "Open source contributions"]
                     },
                     {
-                        'title': 'ML Engineer',
-                        'description': 'Deploy and maintain machine learning models in production',
-                        'required_skills': ['Python', 'TensorFlow/PyTorch', 'MLOps', 'Cloud Platforms', 'Docker'],
-                        'salary_range': '$100,000 - $180,000',
-                        'growth_prospect': 'Very High - AI/ML adoption is accelerating'
+                        "step": 3,
+                        "title": "Learn System Design",
+                        "description": "Understand how to design scalable systems and software architecture.",
+                        "duration": "2-3 months",
+                        "resources": ["System Design Primer", "High Scalability blog", "AWS Architecture Center"]
+                    },
+                    {
+                        "step": 4,
+                        "title": "Practice Technical Interviews",
+                        "description": "Prepare for coding interviews and technical discussions.",
+                        "duration": "1-2 months",
+                        "resources": ["Cracking the Coding Interview", "Mock interviews", "Interview practice platforms"]
+                    },
+                    {
+                        "step": 5,
+                        "title": "Apply and Network",
+                        "description": "Start applying to positions and building professional networks.",
+                        "duration": "Ongoing",
+                        "resources": ["LinkedIn", "Tech meetups", "Job boards", "Company career pages"]
                     }
                 ],
-                'selected_path': {
-                    'title': 'Data Scientist',
-                    'description': 'Your analytical skills and data experience position you well for a data science career',
-                    'required_skills': ['Python', 'Statistics', 'Machine Learning', 'SQL', 'Data Visualization', 'Domain Expertise'],
-                    'salary_range': '$90,000 - $160,000',
-                    'growth_prospect': 'Very High - Data science skills are in extremely high demand'
-                }
+                "courses": [
+                    {
+                        "title": "Complete Web Development Bootcamp",
+                        "provider": "Udemy",
+                        "duration": "65 hours",
+                        "difficulty": "Beginner",
+                        "url": "https://www.udemy.com/course/the-complete-web-development-bootcamp/"
+                    },
+                    {
+                        "title": "Algorithms Specialization",
+                        "provider": "Coursera (Stanford)",
+                        "duration": "4 months",
+                        "difficulty": "Intermediate",
+                        "url": "https://www.coursera.org/specializations/algorithms"
+                    },
+                    {
+                        "title": "System Design Interview",
+                        "provider": "Educative",
+                        "duration": "3-4 weeks",
+                        "difficulty": "Advanced",
+                        "url": "https://www.educative.io/courses/grokking-the-system-design-interview"
+                    }
+                ]
             }
-        }
         
-        # Get appropriate response or use software development as default
-        response_data = domain_responses.get(primary_domain, domain_responses['software_development'])
+        elif domain == 'data_science':
+            return {
+                "career_paths": [
+                    {
+                        "title": "Data Scientist",
+                        "description": "Analyze complex data to drive business decisions and insights.",
+                        "required_skills": ["Python/R", "Statistics", "Machine Learning", "Data Visualization"],
+                        "salary_range": "$80,000 - $160,000",
+                        "growth_prospect": "Very High - Data science is one of the fastest growing fields."
+                    },
+                    {
+                        "title": "Data Analyst",
+                        "description": "Collect, process, and analyze data to support business decisions.",
+                        "required_skills": ["SQL", "Excel", "Tableau/PowerBI", "Statistics"],
+                        "salary_range": "$55,000 - $95,000",
+                        "growth_prospect": "High - Every organization needs data analysts."
+                    },
+                    {
+                        "title": "Machine Learning Engineer",
+                        "description": "Design and implement ML systems and algorithms in production.",
+                        "required_skills": ["Python", "TensorFlow/PyTorch", "MLOps", "Cloud Platforms"],
+                        "salary_range": "$90,000 - $180,000",
+                        "growth_prospect": "Very High - AI/ML adoption is accelerating across industries."
+                    }
+                ],
+                "selected_path": {
+                    "title": "Data Scientist",
+                    "description": "Perfect blend of statistics, programming, and business acumen to extract insights from data.",
+                    "required_skills": ["Python/R", "Statistics", "Machine Learning", "Data Visualization"],
+                    "salary_range": "$80,000 - $160,000",
+                    "growth_prospect": "Very High - Data science is one of the fastest growing fields."
+                },
+                "roadmap": [
+                    {
+                        "step": 1,
+                        "title": "Master Python for Data Science",
+                        "description": "Learn Python, pandas, numpy, and data manipulation techniques.",
+                        "duration": "2-3 months",
+                        "resources": ["Python for Data Analysis book", "Kaggle Learn", "DataCamp"]
+                    },
+                    {
+                        "step": 2,
+                        "title": "Learn Statistics and Math",
+                        "description": "Build strong foundation in statistics, probability, and linear algebra.",
+                        "duration": "2-3 months",
+                        "resources": ["Khan Academy", "Coursera Statistics courses", "Think Stats book"]
+                    },
+                    {
+                        "step": 3,
+                        "title": "Machine Learning Fundamentals",
+                        "description": "Understand supervised and unsupervised learning algorithms.",
+                        "duration": "3-4 months",
+                        "resources": ["Scikit-learn documentation", "Andrew Ng's ML Course", "Hands-On ML book"]
+                    },
+                    {
+                        "step": 4,
+                        "title": "Data Visualization and Communication",
+                        "description": "Learn to create compelling visualizations and communicate findings.",
+                        "duration": "1-2 months",
+                        "resources": ["Matplotlib/Seaborn", "Tableau", "Storytelling with Data book"]
+                    },
+                    {
+                        "step": 5,
+                        "title": "Build Portfolio Projects",
+                        "description": "Complete end-to-end data science projects for your portfolio.",
+                        "duration": "3-4 months",
+                        "resources": ["Kaggle competitions", "GitHub", "Personal blog", "Public datasets"]
+                    }
+                ],
+                "courses": [
+                    {
+                        "title": "Machine Learning Course",
+                        "provider": "Coursera (Stanford)",
+                        "duration": "11 weeks",
+                        "difficulty": "Intermediate",
+                        "url": "https://www.coursera.org/learn/machine-learning"
+                    },
+                    {
+                        "title": "Python for Data Science and AI",
+                        "provider": "IBM (Coursera)",
+                        "duration": "5 weeks",
+                        "difficulty": "Beginner",
+                        "url": "https://www.coursera.org/learn/python-for-applied-data-science-ai"
+                    },
+                    {
+                        "title": "Advanced Data Science Specialization",
+                        "provider": "Johns Hopkins (Coursera)",
+                        "duration": "4 months",
+                        "difficulty": "Advanced",
+                        "url": "https://www.coursera.org/specializations/advanced-data-science-ibm"
+                    }
+                ]
+            }
         
+        # Default fallback for other domains
         return {
-            'career_paths': response_data['career_paths'],
-            'selected_path': response_data['selected_path'],
-            'roadmap': [
+            "career_paths": [
                 {
-                    'step': 1,
-                    'title': 'Skill Assessment and Gap Analysis',
-                    'description': 'Evaluate your current skills and identify areas for improvement',
-                    'duration': '2-4 weeks',
-                    'resources': ['Online assessments', 'Portfolio review', 'Industry research']
+                    "title": "Technology Professional",
+                    "description": "Leverage technology skills to solve problems and drive innovation.",
+                    "required_skills": ["Technical Skills", "Problem Solving", "Communication", "Continuous Learning"],
+                    "salary_range": "$50,000 - $120,000",
+                    "growth_prospect": "High - Technology skills are increasingly valuable across all industries."
                 },
                 {
-                    'step': 2,
-                    'title': 'Learn Core Technologies',
-                    'description': 'Master the fundamental technologies for your chosen career path',
-                    'duration': '3-6 months',
-                    'resources': ['Online courses', 'Documentation', 'Practice projects']
+                    "title": "Digital Specialist",
+                    "description": "Apply digital tools and technologies to improve business processes.",
+                    "required_skills": ["Digital Literacy", "Process Improvement", "Data Analysis", "Project Management"],
+                    "salary_range": "$45,000 - $90,000",
+                    "growth_prospect": "High - Digital transformation is a priority for most organizations."
                 },
                 {
-                    'step': 3,
-                    'title': 'Build Portfolio Projects',
-                    'description': 'Create impressive projects that demonstrate your skills to employers',
-                    'duration': '2-4 months',
-                    'resources': ['GitHub', 'Personal website', 'Case studies']
-                },
-                {
-                    'step': 4,
-                    'title': 'Network and Gain Experience',
-                    'description': 'Connect with professionals and gain real-world experience',
-                    'duration': '3-6 months',
-                    'resources': ['LinkedIn', 'Tech meetups', 'Open source contributions', 'Internships']
-                },
-                {
-                    'step': 5,
-                    'title': 'Job Search and Interview Preparation',
-                    'description': 'Prepare for interviews and start applying to positions',
-                    'duration': '1-3 months',
-                    'resources': ['Interview practice', 'Resume optimization', 'Job boards', 'Referrals']
+                    "title": "Technical Consultant",
+                    "description": "Provide expert advice and solutions for technology challenges.",
+                    "required_skills": ["Domain Expertise", "Communication", "Problem Solving", "Client Management"],
+                    "salary_range": "$60,000 - $140,000",
+                    "growth_prospect": "High - Organizations need specialized expertise for technology adoption."
                 }
             ],
-            'courses': [
+            "selected_path": {
+                "title": "Technology Professional",
+                "description": "A versatile role that allows you to grow your technical skills while contributing to meaningful projects.",
+                "required_skills": ["Technical Skills", "Problem Solving", "Communication", "Continuous Learning"],
+                "salary_range": "$50,000 - $120,000",
+                "growth_prospect": "High - Technology skills are increasingly valuable across all industries."
+            },
+            "roadmap": [
                 {
-                    'title': 'The Complete Web Developer Course',
-                    'provider': 'Udemy',
-                    'duration': '12 weeks',
-                    'difficulty': 'Beginner',
-                    'url': 'https://www.udemy.com/course/the-complete-web-development-bootcamp/'
+                    "step": 1,
+                    "title": "Strengthen Core Skills",
+                    "description": "Focus on building strong technical foundations in your area of interest.",
+                    "duration": "2-3 months",
+                    "resources": ["Online courses", "Practice projects", "Documentation"]
                 },
                 {
-                    'title': 'CS50\'s Introduction to Computer Science',
-                    'provider': 'Harvard (edX)',
-                    'duration': '10 weeks',
-                    'difficulty': 'Beginner',
-                    'url': 'https://www.edx.org/course/introduction-computer-science-harvardx-cs50x'
+                    "step": 2,
+                    "title": "Gain Practical Experience",
+                    "description": "Apply your skills through projects, internships, or volunteer work.",
+                    "duration": "3-6 months",
+                    "resources": ["GitHub projects", "Freelance platforms", "Open source contributions"]
                 },
                 {
-                    'title': 'Python for Everybody Specialization',
-                    'provider': 'University of Michigan (Coursera)',
-                    'duration': '8 weeks',
-                    'difficulty': 'Beginner',
-                    'url': 'https://www.coursera.org/specializations/python'
+                    "step": 3,
+                    "title": "Build Professional Network",
+                    "description": "Connect with professionals in your field and learn from their experiences.",
+                    "duration": "Ongoing",
+                    "resources": ["LinkedIn", "Professional meetups", "Industry conferences"]
                 },
                 {
-                    'title': 'JavaScript Algorithms and Data Structures',
-                    'provider': 'freeCodeCamp',
-                    'duration': '6 weeks',
-                    'difficulty': 'Intermediate',
-                    'url': 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/'
+                    "step": 4,
+                    "title": "Develop Specialization",
+                    "description": "Choose a specific area to specialize in and become an expert.",
+                    "duration": "6-12 months",
+                    "resources": ["Advanced courses", "Certifications", "Industry publications"]
                 },
                 {
-                    'title': 'AWS Cloud Practitioner',
-                    'provider': 'Amazon Web Services',
-                    'duration': '4 weeks',
-                    'difficulty': 'Beginner',
-                    'url': 'https://aws.amazon.com/training/learn-about/cloud-practitioner/'
+                    "step": 5,
+                    "title": "Seek Growth Opportunities",
+                    "description": "Look for positions that challenge you and offer career advancement.",
+                    "duration": "Ongoing",
+                    "resources": ["Job boards", "Career fairs", "Professional referrals"]
+                }
+            ],
+            "courses": [
+                {
+                    "title": "Technology Fundamentals",
+                    "provider": "Coursera",
+                    "duration": "4-6 weeks",
+                    "difficulty": "Beginner",
+                    "url": "https://www.coursera.org/courses?query=technology%20fundamentals"
+                },
+                {
+                    "title": "Project Management Professional",
+                    "provider": "PMI",
+                    "duration": "3-6 months",
+                    "difficulty": "Intermediate",
+                    "url": "https://www.pmi.org/certifications/project-management-pmp"
+                },
+                {
+                    "title": "Digital Transformation",
+                    "provider": "MIT xPRO",
+                    "duration": "8 weeks",
+                    "difficulty": "Advanced",
+                    "url": "https://xpro.mit.edu/courses/course-v1:xPRO+DTx+2024"
                 }
             ]
         }
@@ -824,6 +1001,231 @@ class AIService:
             "bot_response": bot_response
         }
     
+    def _create_enhanced_fallback_resources(self, skills: str, expertise: str, limit: int, topic: str = None) -> Dict[str, Any]:
+        """Create enhanced fallback learning resources based on user skills and expertise"""
+        
+        skills_lower = skills.lower()
+        
+        # Determine primary domain based on skills
+        if any(skill in skills_lower for skill in ['python', 'programming', 'coding', 'software']):
+            return self._create_programming_resources(expertise, limit)
+        elif any(skill in skills_lower for skill in ['javascript', 'js', 'react', 'frontend', 'web']):
+            return self._create_frontend_resources(expertise, limit)
+        elif any(skill in skills_lower for skill in ['data', 'analytics', 'sql', 'machine learning', 'ai']):
+            return self._create_data_science_resources(expertise, limit)
+        elif any(skill in skills_lower for skill in ['design', 'ui', 'ux', 'figma']):
+            return self._create_design_resources(expertise, limit)
+        elif any(skill in skills_lower for skill in ['marketing', 'social media', 'seo', 'content']):
+            return self._create_marketing_resources(expertise, limit)
+        elif any(skill in skills_lower for skill in ['project management', 'agile', 'scrum', 'leadership']):
+            return self._create_management_resources(expertise, limit)
+        else:
+            return self._create_general_tech_resources(expertise, limit)
+    
+    def _create_programming_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create programming-specific learning resources"""
+        
+        youtube_courses = [
+            {"title": "Python Full Course for Beginners - Programming with Mosh", "url": "https://www.youtube.com/watch?v=_uQrJ0TkZlc"},
+            {"title": "Complete Python Tutorial - Tech With Tim", "url": "https://www.youtube.com/watch?v=sxTmJE4k0ho"},
+            {"title": "Advanced Python - Corey Schafer", "url": "https://www.youtube.com/playlist?list=PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU"},
+            {"title": "Software Engineering Principles - MIT OpenCourseWare", "url": "https://www.youtube.com/playlist?list=PLUl4u3cNGP63WbdFxL8giv4yhgdMGaZNA"},
+            {"title": "System Design Interview - Gaurav Sen", "url": "https://www.youtube.com/playlist?list=PLMCXHnjXnTnvo6alSjVkgxV-VH6EPyvoX"},
+            {"title": "Clean Code - Uncle Bob", "url": "https://www.youtube.com/watch?v=7EmboKQH8lM"},
+            {"title": "Git and GitHub Tutorial - Traversy Media", "url": "https://www.youtube.com/watch?v=SWYqp7iY_Tc"}
+        ]
+        
+        articles = [
+            {"title": "Python Best Practices and Tips", "url": "https://realpython.com/python-best-practices/"},
+            {"title": "Clean Code Principles in Python", "url": "https://medium.com/swlh/clean-code-in-python-78a8b4f3e4f9"},
+            {"title": "System Design Primer", "url": "https://github.com/donnemartin/system-design-primer"},
+            {"title": "Python Design Patterns", "url": "https://refactoring.guru/design-patterns/python"},
+            {"title": "Software Engineering Best Practices", "url": "https://github.com/microsoft/code-with-engineering-playbook"},
+            {"title": "Python Performance Tips", "url": "https://wiki.python.org/moin/PythonSpeed/PerformanceTips"},
+            {"title": "Code Review Best Practices", "url": "https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/"}
+        ]
+        
+        # Filter based on expertise level
+        if expertise.lower() in ['beginner', 'entry']:
+            youtube_courses = [c for c in youtube_courses if any(word in c['title'].lower() for word in ['beginner', 'full course', 'tutorial', 'complete'])]
+            articles = [a for a in articles if any(word in a['title'].lower() for word in ['tips', 'best practices', 'primer'])]
+        elif expertise.lower() in ['advanced', 'expert']:
+            youtube_courses = [c for c in youtube_courses if any(word in c['title'].lower() for word in ['advanced', 'system design', 'clean code', 'engineering'])]
+            articles = [a for a in articles if any(word in a['title'].lower() for word in ['design patterns', 'performance', 'engineering', 'advanced'])]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _create_frontend_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create frontend development learning resources"""
+        
+        youtube_courses = [
+            {"title": "React.js Full Course - freeCodeCamp", "url": "https://www.youtube.com/watch?v=4UZrsTqkcW4"},
+            {"title": "JavaScript Crash Course - Traversy Media", "url": "https://www.youtube.com/watch?v=hdI2bqOjy3c"},
+            {"title": "Advanced React Patterns - Kent C. Dodds", "url": "https://www.youtube.com/playlist?list=PLV5CVI1eNcJgCrPH_e6d57KRUTiDZgs0u"},
+            {"title": "CSS Grid and Flexbox - Wes Bos", "url": "https://www.youtube.com/watch?v=T-slCsOrLcc"},
+            {"title": "Modern JavaScript (ES6+) - The Net Ninja", "url": "https://www.youtube.com/playlist?list=PL4cUxeGkcC9haFPT7J25Q9GRB_ZkFrQAc"},
+            {"title": "Vue.js Complete Course - Academind", "url": "https://www.youtube.com/watch?v=FXpIoQ_rT_c"},
+            {"title": "Web Performance Optimization - Google Developers", "url": "https://www.youtube.com/playlist?list=PLNYkxOF6rcIBGvYSYO-VxOsaYQDw5rifJ"}
+        ]
+        
+        articles = [
+            {"title": "React Best Practices and Patterns", "url": "https://reactjs.org/docs/thinking-in-react.html"},
+            {"title": "Modern JavaScript Features", "url": "https://github.com/tc39/proposals/blob/HEAD/finished-proposals.md"},
+            {"title": "CSS-Tricks Complete Guide to Flexbox", "url": "https://css-tricks.com/snippets/css/a-guide-to-flexbox/"},
+            {"title": "Frontend Performance Checklist", "url": "https://github.com/thedaviddias/Front-End-Performance-Checklist"},
+            {"title": "JavaScript Design Patterns", "url": "https://addyosmani.com/resources/essentialjsdesignpatterns/book/"},
+            {"title": "Web Accessibility Guidelines", "url": "https://webaim.org/standards/wcag/checklist"},
+            {"title": "Progressive Web Apps Guide", "url": "https://web.dev/progressive-web-apps/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _create_data_science_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create data science learning resources"""
+        
+        youtube_courses = [
+            {"title": "Python for Data Science - freeCodeCamp", "url": "https://www.youtube.com/watch?v=LHBE6Q9XlzI"},
+            {"title": "Machine Learning Course - Andrew Ng", "url": "https://www.youtube.com/playlist?list=PLLssT5z_DsK-h9vYZkQkYNWcItqhlRJLN"},
+            {"title": "Data Analysis with Pandas - Corey Schafer", "url": "https://www.youtube.com/playlist?list=PL-osiE80TeTsWmV9i9c58mdDCSskIFdDS"},
+            {"title": "SQL Tutorial - W3Schools", "url": "https://www.youtube.com/watch?v=HXV3zeQKqGY"},
+            {"title": "Deep Learning Specialization - deeplearning.ai", "url": "https://www.youtube.com/channel/UCcIXc5mJsHVYTZR1maL5l9w"},
+            {"title": "Statistics for Data Science - StatQuest", "url": "https://www.youtube.com/channel/UCtYLUTtgS3k1Fg4y5tAhLbw"},
+            {"title": "Tableau Tutorial - Tableau", "url": "https://www.youtube.com/user/tableautraining"}
+        ]
+        
+        articles = [
+            {"title": "Pandas Documentation and Tutorials", "url": "https://pandas.pydata.org/docs/user_guide/index.html"},
+            {"title": "Scikit-learn User Guide", "url": "https://scikit-learn.org/stable/user_guide.html"},
+            {"title": "Data Science Project Ideas", "url": "https://github.com/NirantK/awesome-project-ideas"},
+            {"title": "Machine Learning Yearning", "url": "https://github.com/ajaymache/machine-learning-yearning"},
+            {"title": "Feature Engineering Techniques", "url": "https://towardsdatascience.com/feature-engineering-for-machine-learning-3a5e293a5114"},
+            {"title": "Data Visualization Best Practices", "url": "https://serialmentor.com/dataviz/"},
+            {"title": "SQL Performance Tuning", "url": "https://use-the-index-luke.com/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _create_design_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create design learning resources"""
+        
+        youtube_courses = [
+            {"title": "UI/UX Design Tutorial - AJ&Smart", "url": "https://www.youtube.com/c/AJSmart"},
+            {"title": "Figma Tutorial - DesignCourse", "url": "https://www.youtube.com/watch?v=3q3FV65ZrUs"},
+            {"title": "Design Systems - Design+Code", "url": "https://www.youtube.com/watch?v=wc5krSTA8ds"},
+            {"title": "Color Theory for Designers - Will Paterson", "url": "https://www.youtube.com/watch?v=AvgCkHrcj90"},
+            {"title": "Typography Fundamentals - Flux", "url": "https://www.youtube.com/watch?v=qaZK9Awi0Nk"},
+            {"title": "User Research Methods - NNGroup", "url": "https://www.youtube.com/user/NNgroup"},
+            {"title": "Accessibility in Design - Google Design", "url": "https://www.youtube.com/playlist?list=PLJ21zHI2TNh_hU6khn7BzJrGfNQA-TCLE"}
+        ]
+        
+        articles = [
+            {"title": "Design Systems Handbook", "url": "https://www.designbetter.co/design-systems-handbook"},
+            {"title": "Material Design Guidelines", "url": "https://material.io/design"},
+            {"title": "Laws of UX", "url": "https://lawsofux.com/"},
+            {"title": "Inclusive Design Principles", "url": "https://inclusivedesignprinciples.org/"},
+            {"title": "Design Pattern Library", "url": "https://ui-patterns.com/patterns"},
+            {"title": "Color Accessibility Guidelines", "url": "https://webaim.org/articles/contrast/"},
+            {"title": "User Research Methods Guide", "url": "https://www.nngroup.com/articles/which-ux-research-methods/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _create_marketing_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create marketing learning resources"""
+        
+        youtube_courses = [
+            {"title": "Digital Marketing Course - Google Digital Garage", "url": "https://www.youtube.com/watch?v=bixR-KIJKYM"},
+            {"title": "SEO Tutorial - Moz", "url": "https://www.youtube.com/user/MozHQ"},
+            {"title": "Social Media Marketing - HubSpot", "url": "https://www.youtube.com/user/HubSpot"},
+            {"title": "Content Marketing - Neil Patel", "url": "https://www.youtube.com/user/neilvkpatel"},
+            {"title": "Email Marketing - Mailchimp", "url": "https://www.youtube.com/user/MailChimp"},
+            {"title": "Google Analytics - Google Analytics", "url": "https://www.youtube.com/user/googleanalytics"},
+            {"title": "Growth Hacking - GrowthHackers", "url": "https://www.youtube.com/channel/UCN20PbGdCq3fQ8pP_PoFGRw"}
+        ]
+        
+        articles = [
+            {"title": "HubSpot Marketing Hub", "url": "https://blog.hubspot.com/marketing"},
+            {"title": "Moz SEO Learning Center", "url": "https://moz.com/learn/seo"},
+            {"title": "Content Marketing Institute", "url": "https://contentmarketinginstitute.com/"},
+            {"title": "Social Media Examiner", "url": "https://www.socialmediaexaminer.com/"},
+            {"title": "Google Ads Help Center", "url": "https://support.google.com/google-ads"},
+            {"title": "Facebook Business Help Center", "url": "https://www.facebook.com/business/help"},
+            {"title": "Marketing Land", "url": "https://marketingland.com/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _create_management_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create project management learning resources"""
+        
+        youtube_courses = [
+            {"title": "Project Management Fundamentals - PMI", "url": "https://www.youtube.com/user/PMInstitute"},
+            {"title": "Agile and Scrum Tutorial - Simplilearn", "url": "https://www.youtube.com/watch?v=9TycLR0TqFA"},
+            {"title": "Leadership Skills - Harvard Business Review", "url": "https://www.youtube.com/user/HarvardBusiness"},
+            {"title": "Team Management - Brian Tracy", "url": "https://www.youtube.com/user/BrianTracySpeaker"},
+            {"title": "Product Management - Product School", "url": "https://www.youtube.com/channel/UC6hlQ0x6kPbAGjYkoz53cvA"},
+            {"title": "Kanban Tutorial - Kanbanize", "url": "https://www.youtube.com/user/KanbanizeTV"},
+            {"title": "Remote Team Management - Buffer", "url": "https://www.youtube.com/c/bufferapp"}
+        ]
+        
+        articles = [
+            {"title": "Project Management Institute Guide", "url": "https://www.pmi.org/learning/library"},
+            {"title": "Agile Alliance Resources", "url": "https://www.agilealliance.org/agile101/"},
+            {"title": "Scrum Guide Official", "url": "https://scrumguides.org/scrum-guide.html"},
+            {"title": "Product Management Resources", "url": "https://www.productplan.com/learn/"},
+            {"title": "Leadership Best Practices", "url": "https://hbr.org/topic/leadership"},
+            {"title": "Remote Work Best Practices", "url": "https://blog.trello.com/remote-work-team-management-tips"},
+            {"title": "Team Building Strategies", "url": "https://www.atlassian.com/team-playbook"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _create_general_tech_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create general technology learning resources"""
+        
+        youtube_courses = [
+            {"title": "Computer Science Fundamentals - CS50 Harvard", "url": "https://www.youtube.com/user/cs50tv"},
+            {"title": "Software Engineering - MIT OpenCourseWare", "url": "https://www.youtube.com/user/MIT"},
+            {"title": "Cloud Computing - AWS", "url": "https://www.youtube.com/user/AmazonWebServices"},
+            {"title": "Cybersecurity Fundamentals - SANS", "url": "https://www.youtube.com/user/SANSInstitute"},
+            {"title": "DevOps Tutorial - TechWorld with Nana", "url": "https://www.youtube.com/c/TechWorldwithNana"},
+            {"title": "Algorithms and Data Structures - MIT", "url": "https://www.youtube.com/playlist?list=PLUl4u3cNGP61Oq3tWYp6V_F-5jb5L2iHb"},
+            {"title": "Tech Career Advice - TechLead", "url": "https://www.youtube.com/c/TechLead"}
+        ]
+        
+        articles = [
+            {"title": "Free Programming Books", "url": "https://github.com/EbookFoundation/free-programming-books"},
+            {"title": "System Design Interview", "url": "https://github.com/donnemartin/system-design-primer"},
+            {"title": "Tech Interview Handbook", "url": "https://github.com/yangshun/tech-interview-handbook"},
+            {"title": "Awesome Lists Collection", "url": "https://github.com/sindresorhus/awesome"},
+            {"title": "DevOps Roadmap", "url": "https://roadmap.sh/devops"},
+            {"title": "Cloud Computing Guide", "url": "https://aws.amazon.com/getting-started/"},
+            {"title": "Open Source Contribution Guide", "url": "https://opensource.guide/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
     def extract_skills_with_levels(self, message: str) -> Dict[str, Any]:
         """Extract skills and expertise levels from message using available AI services with fallbacks"""
         
@@ -990,3 +1392,262 @@ class AIService:
                 unique_skills.append(skill)
         
         return {"extracted_skills": unique_skills}
+    
+    # Topic-specific resource creation methods
+    def _get_software_development_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create software development learning resources"""
+        return self._create_programming_resources(expertise, limit)
+    
+    def _get_web_development_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create web development learning resources"""
+        return self._create_frontend_resources(expertise, limit)
+    
+    def _get_data_science_resources_detailed(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create detailed data science learning resources"""
+        return self._create_data_science_resources(expertise, limit)
+    
+    def _get_ai_ml_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create AI/ML specific learning resources"""
+        youtube_courses = [
+            {"title": "Machine Learning Course - Stanford CS229", "url": "https://www.youtube.com/playlist?list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU"},
+            {"title": "Deep Learning Specialization - Andrew Ng", "url": "https://www.youtube.com/channel/UCcIXc5mJsHVYTZR1maL5l9w"},
+            {"title": "MIT 6.034 Artificial Intelligence", "url": "https://www.youtube.com/playlist?list=PLUl4u3cNGP63gFHB6xb-kVBiQHYe_4hSi"},
+            {"title": "PyTorch Tutorial - Python Engineer", "url": "https://www.youtube.com/playlist?list=PLqnslRFeH2UrcDBWF5mfPGpqQDSta6VK4"},
+            {"title": "TensorFlow 2.0 Complete Course - freeCodeCamp", "url": "https://www.youtube.com/watch?v=tPYj3fFJGjk"},
+            {"title": "Natural Language Processing - Stanford CS224N", "url": "https://www.youtube.com/playlist?list=PLoROMvodv4rOSH4v6133s9LFPRHjEmbmJ"},
+            {"title": "Computer Vision - Stanford CS231n", "url": "https://www.youtube.com/playlist?list=PL3FW7Lu3i5JvHM8ljYj-zLfQRF3EO8sYv"}
+        ]
+        
+        articles = [
+            {"title": "Machine Learning Mastery", "url": "https://machinelearningmastery.com/"},
+            {"title": "Papers With Code", "url": "https://paperswithcode.com/"},
+            {"title": "Towards Data Science", "url": "https://towardsdatascience.com/"},
+            {"title": "OpenAI Research", "url": "https://openai.com/research/"},
+            {"title": "Google AI Blog", "url": "https://ai.googleblog.com/"},
+            {"title": "Distill - Clear explanations of ML", "url": "https://distill.pub/"},
+            {"title": "AI Research Papers - arXiv", "url": "https://arxiv.org/list/cs.AI/recent"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _get_mobile_development_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create mobile development learning resources"""
+        youtube_courses = [
+            {"title": "React Native Tutorial - Programming with Mosh", "url": "https://www.youtube.com/watch?v=0-S5a0eXPoc"},
+            {"title": "Flutter Crash Course - Traversy Media", "url": "https://www.youtube.com/watch?v=1gDhl4leEzA"},
+            {"title": "Android Development - Android Developers", "url": "https://www.youtube.com/user/androiddevelopers"},
+            {"title": "iOS Development with Swift - CodeWithChris", "url": "https://www.youtube.com/user/CodeWithChris"},
+            {"title": "Kotlin for Android - Coding in Flow", "url": "https://www.youtube.com/channel/UC_Fh8kvtkVPkeihBs42jGcA"},
+            {"title": "Xamarin Tutorial - Microsoft Developer", "url": "https://www.youtube.com/c/MicrosoftDeveloper"},
+            {"title": "Mobile App Design - AJ&Smart", "url": "https://www.youtube.com/c/AJSmart"}
+        ]
+        
+        articles = [
+            {"title": "React Native Documentation", "url": "https://reactnative.dev/docs/getting-started"},
+            {"title": "Flutter Documentation", "url": "https://flutter.dev/docs"},
+            {"title": "Android Developer Guides", "url": "https://developer.android.com/guide"},
+            {"title": "iOS Human Interface Guidelines", "url": "https://developer.apple.com/design/human-interface-guidelines/"},
+            {"title": "Mobile App Development Best Practices", "url": "https://www.smashingmagazine.com/category/mobile/"},
+            {"title": "Cross-Platform Development Guide", "url": "https://ionic.io/resources/articles"},
+            {"title": "Mobile Performance Optimization", "url": "https://web.dev/mobile/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _get_devops_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create DevOps learning resources"""
+        youtube_courses = [
+            {"title": "Docker Tutorial - TechWorld with Nana", "url": "https://www.youtube.com/watch?v=3c-iBn73dDE"},
+            {"title": "Kubernetes Tutorial - TechWorld with Nana", "url": "https://www.youtube.com/watch?v=X48VuDVv0do"},
+            {"title": "AWS Tutorial - freeCodeCamp", "url": "https://www.youtube.com/watch?v=3hLmDS179YE"},
+            {"title": "Terraform Tutorial - HashiCorp", "url": "https://www.youtube.com/c/HashiCorp"},
+            {"title": "Jenkins Tutorial - Edureka", "url": "https://www.youtube.com/watch?v=FX322RVNGj4"},
+            {"title": "Ansible Tutorial - TechWorld with Nana", "url": "https://www.youtube.com/watch?v=1id6ERvfozo"},
+            {"title": "DevOps Engineering Course - freeCodeCamp", "url": "https://www.youtube.com/watch?v=j5Zsa_eOXeY"}
+        ]
+        
+        articles = [
+            {"title": "DevOps Roadmap", "url": "https://roadmap.sh/devops"},
+            {"title": "Docker Documentation", "url": "https://docs.docker.com/"},
+            {"title": "Kubernetes Documentation", "url": "https://kubernetes.io/docs/home/"},
+            {"title": "AWS Well-Architected Framework", "url": "https://aws.amazon.com/architecture/well-architected/"},
+            {"title": "The Twelve-Factor App", "url": "https://12factor.net/"},
+            {"title": "Site Reliability Engineering", "url": "https://sre.google/sre-book/table-of-contents/"},
+            {"title": "Infrastructure as Code Best Practices", "url": "https://www.terraform.io/docs/cloud/guides/recommended-practices/index.html"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _get_cybersecurity_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create cybersecurity learning resources"""
+        youtube_courses = [
+            {"title": "Cybersecurity Full Course - edX", "url": "https://www.youtube.com/watch?v=inWWhr5tnEA"},
+            {"title": "Ethical Hacking - Cybrary", "url": "https://www.youtube.com/c/CybraryIT"},
+            {"title": "Network Security - Professor Messer", "url": "https://www.youtube.com/c/professormesser"},
+            {"title": "CISSP Training - InfoSec Institute", "url": "https://www.youtube.com/user/InfoSecInstitute"},
+            {"title": "Penetration Testing - The Cyber Mentor", "url": "https://www.youtube.com/c/TheCyberMentor"},
+            {"title": "Malware Analysis - OALabs", "url": "https://www.youtube.com/c/OALabs"},
+            {"title": "Digital Forensics - 13Cubed", "url": "https://www.youtube.com/c/13cubed"}
+        ]
+        
+        articles = [
+            {"title": "NIST Cybersecurity Framework", "url": "https://www.nist.gov/cyberframework"},
+            {"title": "OWASP Top 10", "url": "https://owasp.org/www-project-top-ten/"},
+            {"title": "Cybersecurity & Infrastructure Security Agency", "url": "https://www.cisa.gov/"},
+            {"title": "Krebs on Security", "url": "https://krebsonsecurity.com/"},
+            {"title": "SANS Reading Room", "url": "https://www.sans.org/reading-room/"},
+            {"title": "Cybersecurity Best Practices", "url": "https://www.sans.org/security-resources/"},
+            {"title": "Threat Intelligence Reports", "url": "https://attack.mitre.org/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _get_design_resources_detailed(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create detailed design learning resources"""
+        return self._create_design_resources(expertise, limit)
+    
+    def _get_blockchain_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create blockchain learning resources"""
+        youtube_courses = [
+            {"title": "Blockchain Full Course - freeCodeCamp", "url": "https://www.youtube.com/watch?v=gyMwXuJrbJQ"},
+            {"title": "Solidity Tutorial - Smart Contract Programmer", "url": "https://www.youtube.com/c/SmartContractProgrammer"},
+            {"title": "Web3 Development - Dapp University", "url": "https://www.youtube.com/c/DappUniversity"},
+            {"title": "Ethereum Development - Patrick Collins", "url": "https://www.youtube.com/c/PatrickCollins"},
+            {"title": "DeFi Tutorial - Finematics", "url": "https://www.youtube.com/c/Finematics"},
+            {"title": "NFT Development - HashLips", "url": "https://www.youtube.com/c/HashLipsNFT"},
+            {"title": "Cryptocurrency Trading - Coin Bureau", "url": "https://www.youtube.com/c/CoinBureau"}
+        ]
+        
+        articles = [
+            {"title": "Ethereum Documentation", "url": "https://ethereum.org/en/developers/docs/"},
+            {"title": "Solidity Documentation", "url": "https://docs.soliditylang.org/"},
+            {"title": "Web3.js Documentation", "url": "https://web3js.readthedocs.io/"},
+            {"title": "OpenZeppelin Contracts", "url": "https://docs.openzeppelin.com/contracts/"},
+            {"title": "DeFi Pulse - DeFi Rankings", "url": "https://defipulse.com/"},
+            {"title": "CoinDesk - Blockchain News", "url": "https://www.coindesk.com/"},
+            {"title": "Blockchain Council Resources", "url": "https://www.blockchain-council.org/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _get_game_development_resources(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create game development learning resources"""
+        youtube_courses = [
+            {"title": "Unity Game Development - Brackeys", "url": "https://www.youtube.com/user/Brackeys"},
+            {"title": "Unreal Engine Tutorial - Ryan Laley", "url": "https://www.youtube.com/c/RyanLaley"},
+            {"title": "Godot Game Engine - GDQuest", "url": "https://www.youtube.com/c/Gdquest"},
+            {"title": "C# for Unity - Code Monkey", "url": "https://www.youtube.com/c/CodeMonkeyUnity"},
+            {"title": "Game Design Fundamentals - Extra Credits", "url": "https://www.youtube.com/extracredits"},
+            {"title": "2D Game Art - AdamCYounis", "url": "https://www.youtube.com/user/AdamCYounis"},
+            {"title": "Blender for Games - CG Cookie", "url": "https://www.youtube.com/user/blendercookie"}
+        ]
+        
+        articles = [
+            {"title": "Unity Learn Platform", "url": "https://learn.unity.com/"},
+            {"title": "Unreal Engine Documentation", "url": "https://docs.unrealengine.com/"},
+            {"title": "Godot Engine Documentation", "url": "https://docs.godotengine.org/"},
+            {"title": "Game Development Patterns", "url": "https://gameprogrammingpatterns.com/"},
+            {"title": "Gamasutra - Game Development", "url": "https://www.gamasutra.com/"},
+            {"title": "IndieDB - Independent Games", "url": "https://www.indiedb.com/"},
+            {"title": "GDC Vault - Game Developers Conference", "url": "https://www.gdcvault.com/"}
+        ]
+        
+        return {
+            "youtube_courses": youtube_courses[:limit],
+            "articles": articles[:limit]
+        }
+    
+    def _get_marketing_resources_detailed(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create detailed marketing learning resources"""
+        return self._create_marketing_resources(expertise, limit)
+    
+    def _get_management_resources_detailed(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create detailed management learning resources"""
+        return self._create_management_resources(expertise, limit)
+    
+    def _get_general_tech_resources_detailed(self, expertise: str, limit: int) -> Dict[str, Any]:
+        """Create detailed general tech learning resources"""
+        return self._create_general_tech_resources(expertise, limit)
+    
+    def generate_learning_resources(self, skills: str, expertise: str, limit: int = 5, topic: str = None) -> Dict[str, Any]:
+        """Generate learning resources including YouTube courses and articles using available AI services with fallbacks"""
+        
+        # Build topic-specific context for the prompt
+        topic_context = ""
+        if topic and topic.lower() != 'all':
+            topic_context = f" with a focus on {topic}"
+        
+        prompt = f"""
+        For a user with skills {skills} and expertise {expertise}{topic_context}, 
+        suggest {limit} best YouTube courses and {limit} best articles to improve their career path.
+        Return strictly in JSON format:
+        {{
+          "youtube_courses": [
+            {{"title": "...", "url": "..."}}
+          ],
+          "articles": [
+            {{"title": "...", "url": "..."}}
+          ]
+        }}
+        
+        Make sure the resources are:
+        1. Relevant to the specified skills and expertise level{' and focused on ' + topic if topic and topic.lower() != 'all' else ''}
+        2. High-quality and from reputable sources
+        3. Appropriate for career advancement
+        4. Include real, working URLs when possible
+        5. Cover both foundational and advanced topics based on expertise level
+        {f'6. Specifically focused on {topic} topics and technologies' if topic and topic.lower() != 'all' else ''}
+        """
+
+        # Try Vertex AI first if available
+        if self.vertex_ai_available and self.model:
+            try:
+                response = self.model.generate_content(prompt)
+                response_text = response.text
+                
+                # Extract JSON from response
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
+                
+                if start_idx != -1 and end_idx != -1:
+                    json_str = response_text[start_idx:end_idx]
+                    result = json.loads(json_str)
+                    print("✅ Generated learning resources using Vertex AI")
+                    return result
+                    
+            except Exception as e:
+                print(f"Vertex AI resource generation failed: {e}")
+        
+        # Try fallback AI services
+        ai_response = self._generate_with_fallback_ai(prompt)
+        if ai_response:
+            try:
+                # Try to extract JSON from AI response
+                start_idx = ai_response.find('{')
+                end_idx = ai_response.rfind('}') + 1
+                
+                if start_idx != -1 and end_idx != -1:
+                    json_str = ai_response[start_idx:end_idx]
+                    result = json.loads(json_str)
+                    return result
+            except Exception as e:
+                print(f"Error parsing AI resource response: {e}")
+        
+        # Fallback to static resources
+        print("📚 Using enhanced static learning resources")
+        return self._create_enhanced_fallback_resources(skills, expertise, limit, topic)

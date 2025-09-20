@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config.settings import settings
-from routes import analyze, health, mock_test, auth, chat, update_skills
+from routes import analyze, health, mock_test, auth, chat, update_skills, resources
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -26,6 +26,7 @@ app.include_router(analyze.router)
 app.include_router(mock_test.router)
 app.include_router(chat.router)
 app.include_router(update_skills.router)
+app.include_router(resources.router)
 
 if __name__ == "__main__":
     import uvicorn

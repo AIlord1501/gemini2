@@ -154,6 +154,20 @@ class UserService:
             created_at=user_data["created_at"],
             updated_at=user_data["updated_at"]
         )
+    
+    def save_resource(self, resource_data: Dict[str, Any]) -> None:
+        """Save learning resource data to Firestore"""
+        if not self.firestore_client:
+            raise Exception("Firestore not available")
+        
+        try:
+            # Save to resources collection
+            doc_ref = self.firestore_client.collection('resources').document(resource_data['resource_id'])
+            doc_ref.set(resource_data)
+            print(f"Resource saved to Firestore: {resource_data['resource_id']}")
+        except Exception as e:
+            print(f"Error saving resource to Firestore: {e}")
+            raise Exception("Failed to save resource")
 
 # Global user service instance
 user_service = UserService()

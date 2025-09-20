@@ -255,4 +255,26 @@ export const generateMockTest = async (skills, expertise, topic = null, userId =
   }
 };
 
+// Export the getResources function for learning resources
+export const getResources = async ({ skills, expertise, limit = 5, topic = null }) => {
+  try {
+    const requestData = {
+      skills,
+      expertise,
+      limit
+    };
+    
+    // Only add topic if it's provided and not 'all'
+    if (topic && topic !== 'all') {
+      requestData.topic = topic;
+    }
+    
+    const response = await api.post('/resources', requestData);
+    return response.data;
+  } catch (error) {
+    console.error('Get resources error:', error);
+    throw error;
+  }
+};
+
 export default api;

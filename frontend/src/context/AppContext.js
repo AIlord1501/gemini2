@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { careerAPI, tokenManager } from '../services/api';
+import { careerAPI, tokenManager, getResources } from '../services/api';
 
 // Initial state
 const initialState = {
@@ -7,6 +7,7 @@ const initialState = {
   userExpertise: '',
   aiResponse: null,
   mockTest: null,
+  resources: { youtube_courses: [], articles: [] },
   user: null,
   isAuthenticated: false,
   loading: false,
@@ -19,6 +20,7 @@ const ActionTypes = {
   SET_EXPERTISE: 'SET_EXPERTISE',
   SET_AI_RESPONSE: 'SET_AI_RESPONSE',
   SET_MOCK_TEST: 'SET_MOCK_TEST',
+  SET_RESOURCES: 'SET_RESOURCES',
   SET_USER: 'SET_USER',
   SET_AUTHENTICATED: 'SET_AUTHENTICATED',
   SET_LOADING: 'SET_LOADING',
@@ -55,6 +57,13 @@ const appReducer = (state, action) => {
       return {
         ...state,
         mockTest: action.payload,
+        loading: false,
+        error: null,
+      };
+    case ActionTypes.SET_RESOURCES:
+      return {
+        ...state,
+        resources: action.payload,
         loading: false,
         error: null,
       };
@@ -163,6 +172,10 @@ export const AppProvider = ({ children }) => {
     dispatch({ type: ActionTypes.SET_MOCK_TEST, payload: mockTest });
   };
 
+  const setResources = (resources) => {
+    dispatch({ type: ActionTypes.SET_RESOURCES, payload: resources });
+  };
+
   const setUser = (user) => {
     dispatch({ type: ActionTypes.SET_USER, payload: user });
   };
@@ -230,12 +243,53 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Update resources based on current user skills and expertise
+  const updateResources = async (limit = 5) => {
+    const skills = state.userSkills || 'General Technology';
+    const expertise = state.userExpertise || 'beginner';
+    
+    if (!skills) {
+      console.warn('No skills available for resource recommendations');
+      return;
+    }
+    
+    try {
+      console.log('AppContext: Updating resources with skills:', skills, 'expertise:', expertise);
+      setLoading(true);
+      
+      const response = await getResources({
+        skills,
+        expertise,
+        limit
+      });
+      
+      // Update resources state
+      setResources({
+        youtube_courses: response.youtube_courses || [],
+        articles: response.articles || []
+      });
+      
+      console.log('AppContext: Resources updated successfully');
+      console.log('YouTube courses:', response.youtube_courses?.length || 0);
+      console.log('Articles:', response.articles?.length || 0);
+      
+      return response;
+    } catch (error) {
+      console.error('AppContext: Failed to update resources:', error);
+      setError(error.message || 'Failed to load learning resources');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     ...state,
     setSkills,
     setExpertise,
     setAIResponse,
     setMockTest,
+    setResources,
     setUser,
     setAuthenticated,
     setLoading,
@@ -245,6 +299,7 @@ export const AppProvider = ({ children }) => {
     updateUserSkills,
     triggerReanalysis,
     autoReanalyze,
+    updateResources,
   };
 
   return (
@@ -264,3 +319,6 @@ export const useAppContext = () => {
 };
 
 export default AppContext;
+
+// Named export for compatibility
+export { AppContext };

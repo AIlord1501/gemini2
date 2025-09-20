@@ -11,6 +11,12 @@ const Landing = () => {
     expertise: '',
   });
 
+  const expertiseLevels = [
+    { value: 'Beginner', label: 'Beginner (0-2 years experience)' },
+    { value: 'Intermediate', label: 'Intermediate (2-5 years experience)' },
+    { value: 'Advanced', label: 'Advanced (5+ years experience)' },
+  ];
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -22,7 +28,7 @@ const Landing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.skills.trim() || !formData.expertise.trim()) {
+    if (!formData.skills.trim() || !formData.expertise) {
       setError('Please fill in both skills and expertise fields');
       return;
     }
@@ -51,15 +57,14 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Discover Your
-            <span className="text-primary-600"> Career Path</span>
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
+            AI Career Path Finder
           </h1>
-          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
-            Get personalized career recommendations, roadmaps, and course suggestions 
-            powered by AI. Tell us about your skills and expertise, and we'll help you 
-            find the perfect career path.
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Discover your ideal career path with AI-powered analysis. Get personalized 
+            recommendations, roadmaps, and course suggestions tailored to your skills and experience.
           </p>
         </div>
 
@@ -76,31 +81,36 @@ const Landing = () => {
                   rows={4}
                   value={formData.skills}
                   onChange={handleInputChange}
-                  placeholder="e.g., Python, JavaScript, React, Project Management, Data Analysis..."
+                  placeholder="e.g., Python, JavaScript, React, Project Management, Data Analysis, Leadership..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   required
                 />
                 <p className="mt-2 text-sm text-gray-500">
-                  List your technical skills, soft skills, and areas of expertise
+                  List your skills separated by commas (technical skills, soft skills, tools, etc.)
                 </p>
               </div>
 
               <div>
                 <label htmlFor="expertise" className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Experience & Expertise
+                  Experience Level
                 </label>
-                <textarea
+                <select
                   id="expertise"
                   name="expertise"
-                  rows={4}
                   value={formData.expertise}
                   onChange={handleInputChange}
-                  placeholder="e.g., 3 years of full-stack development, experience with cloud platforms, led a team of 5 developers..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   required
-                />
+                >
+                  <option value="">Select your experience level</option>
+                  {expertiseLevels.map((level) => (
+                    <option key={level.value} value={level.value}>
+                      {level.label}
+                    </option>
+                  ))}
+                </select>
                 <p className="mt-2 text-sm text-gray-500">
-                  Describe your professional experience, achievements, and areas of expertise
+                  Choose the level that best describes your professional experience
                 </p>
               </div>
 
@@ -115,7 +125,7 @@ const Landing = () => {
                     Analyzing Your Career Path...
                   </div>
                 ) : (
-                  'Analyze My Career Path'
+                  'Find My Career Path'
                 )}
               </button>
             </form>

@@ -1,9 +1,30 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 
 const CareerPath = () => {
-  const { aiResponse, error } = useAppContext();
+  const { aiResponse, error, loading } = useAppContext();
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Analyzing Your Career Paths</h1>
+            <p className="text-gray-600">
+              Our AI is analyzing your skills and experience to find the best career paths for you...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
@@ -24,6 +45,7 @@ const CareerPath = () => {
     );
   }
 
+  // No data state
   if (!aiResponse) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
@@ -33,12 +55,12 @@ const CareerPath = () => {
             <p className="text-gray-600 mb-8">
               No analysis data available. Please start by analyzing your career path.
             </p>
-            <a
-              href="/"
+            <Link
+              to="/"
               className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               Start Analysis
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -149,20 +171,20 @@ const CareerPath = () => {
         {/* Action Buttons */}
         <div className="mt-12 text-center">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="/roadmap"
+            <Link
+              to="/roadmap"
               className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               <span className="mr-2">🗺️</span>
               View Roadmap
-            </a>
-            <a
-              href="/courses"
+            </Link>
+            <Link
+              to="/courses"
               className="inline-flex items-center px-6 py-3 bg-white text-primary-600 border border-primary-600 rounded-lg hover:bg-primary-50 transition-colors"
             >
               <span className="mr-2">📚</span>
               Browse Courses
-            </a>
+            </Link>
           </div>
         </div>
       </div>

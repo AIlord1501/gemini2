@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+  baseURL: 'http://127.0.0.1:8000',
   timeout: 30000, // 30 seconds timeout for AI requests
   headers: {
     'Content-Type': 'application/json',
@@ -82,6 +82,20 @@ export const careerAPI = {
       throw error;
     }
   },
+};
+
+// Export the analyzeCareer function directly for convenience
+export const analyzeCareer = async (skills, expertise) => {
+  try {
+    const response = await api.post('/analyze', {
+      skills,
+      expertise,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Career analysis error:', error);
+    throw error;
+  }
 };
 
 export default api;

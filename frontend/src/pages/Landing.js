@@ -5,7 +5,7 @@ import { careerAPI } from '../services/api';
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { setSkills, setExpertise, setAIResponse, setLoading, setError, loading } = useAppContext();
+  const { setSkills, setExpertise, setAIResponse, setLoading, setError, loading, error } = useAppContext();
   const [formData, setFormData] = useState({
     skills: '',
     expertise: '',
@@ -28,8 +28,24 @@ const Landing = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.skills.trim() || !formData.expertise) {
-      setError('Please fill in both skills and expertise fields');
+    console.log('Form submitted with data:', formData);
+    
+    // Enhanced validation
+    if (!formData.skills.trim()) {
+      console.log('Validation failed: No skills entered');
+      setError('Please enter your skills');
+      return;
+    }
+    
+    if (formData.skills.trim().length < 3) {
+      console.log('Validation failed: Skills too short');
+      setError('Please enter at least 3 characters for skills');
+      return;
+    }
+    
+    if (!formData.expertise) {
+      console.log('Validation failed: No expertise selected');
+      setError('Please select your experience level');
       return;
     }
 
@@ -37,18 +53,58 @@ const Landing = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Starting career analysis request...');
+      console.log('API Base URL:', careerAPI);
+      
       // Update context with form data
-      setSkills(formData.skills);
+      setSkills(formData.skills.trim());
       setExpertise(formData.expertise);
       
       // Call API
-      const response = await careerAPI.analyzeCareer(formData.skills, formData.expertise);
+      console.log('Calling analyzeCareer with:', {
+        skills: formData.skills.trim(),
+        expertise: formData.expertise
+      });
+      
+      const response = await careerAPI.analyzeCareer(formData.skills.trim(), formData.expertise);
+      console.log('Career analysis response received:', response);
+      
+      if (!response) {
+        throw new Error('No response received from server');
+      }
+      
+      if (!response.career_paths || !Array.isArray(response.career_paths)) {
+        console.error('Invalid response structure:', response);
+        throw new Error('Invalid response from server - missing career paths');
+      }
+      
+      console.log('Setting AI response and navigating to dashboard...');
       setAIResponse(response);
       
-      // Navigate to dashboard
-      navigate('/dashboard');
+      // Small delay to ensure state is set
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 100);
+      
     } catch (error) {
-      setError(error.message);
+      console.error('Career analysis failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response
+      });
+      
+      let errorMessage = 'Failed to analyze career path. ';
+      
+      if (error.message.includes('Network Error')) {
+        errorMessage += 'Please check your internet connection and ensure the backend server is running.';
+      } else if (error.message.includes('Server Error')) {
+        errorMessage += 'The server encountered an error. Please try again in a moment.';
+      } else {
+        errorMessage += 'Please try again or contact support if the problem persists.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -70,6 +126,25 @@ const Landing = () => {
 
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-8">
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <span className="text-red-400 text-xl">⚠️</span>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Error</h3>
+                    <p className="mt-1 text-sm text-red-700">{error}</p>
+                    <button 
+                      onClick={() => setError(null)}
+                      className="mt-2 text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
@@ -84,6 +159,7 @@ const Landing = () => {
                   placeholder="e.g., Python, JavaScript, React, Project Management, Data Analysis, Leadership..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
                   required
+                  minLength={3}
                 />
                 <p className="mt-2 text-sm text-gray-500">
                   List your skills separated by commas (technical skills, soft skills, tools, etc.)
@@ -127,6 +203,25 @@ const Landing = () => {
                 ) : (
                   'Find My Career Path'
                 )}
+              </button>
+              
+              {/* Debug button for testing */}
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    console.log('Testing API connection...');
+                    const testResponse = await careerAPI.healthCheck();
+                    console.log('Health check response:', testResponse);
+                    alert('✅ Backend connection successful!');
+                  } catch (error) {
+                    console.error('Health check failed:', error);
+                    alert('❌ Backend connection failed: ' + error.message);
+                  }
+                }}
+                className="w-full mt-2 bg-gray-500 text-white py-2 px-4 rounded-lg text-sm hover:bg-gray-600 transition-colors"
+              >
+                🔧 Test Backend Connection
               </button>
             </form>
           </div>

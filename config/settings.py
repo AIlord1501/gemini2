@@ -18,6 +18,10 @@ class Settings:
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",  # React development server
         "http://127.0.0.1:3000",
+        "http://localhost:3001",  # Alternative React port
+        "http://127.0.0.1:3001",
+        "http://localhost:3005",  # Current React port
+        "http://127.0.0.1:3005",
     ]
     
     # Google Cloud Configuration

@@ -173,45 +173,69 @@ const MockTest = () => {
             {/* Questions */}
             <div className="space-y-6">
               {mockTest.questions.map((question, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900 flex-1">
-                      <span className="inline-flex items-center justify-center w-8 h-8 bg-primary-100 text-primary-800 rounded-full text-sm font-bold mr-3">
-                        {index + 1}
+                <div 
+                  key={index} 
+                  className="bg-white border border-gray-200 rounded-xl shadow-sm card-hover overflow-hidden"
+                >
+                  {/* Question Header */}
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-lg font-medium text-gray-900 flex-1 leading-relaxed">
+                        <span className="inline-flex items-center justify-center w-8 h-8 bg-primary-100 text-primary-800 rounded-full text-sm font-bold mr-3 flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        {question.question}
+                      </h3>
+                    </div>
+
+                    {/* Toggle Answer Button */}
+                    <button
+                      onClick={() => toggleAnswer(index)}
+                      className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
+                        expandedAnswers[index]
+                          ? 'bg-primary-600 text-white hover:bg-primary-700 shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <span className="mr-2">
+                        {expandedAnswers[index] ? '👁️' : '💡'}
                       </span>
-                      {question.question}
-                    </h3>
+                      {expandedAnswers[index] ? 'Hide Answer' : 'Show Answer'}
+                      <svg 
+                        className={`ml-2 w-4 h-4 transition-transform duration-200 ${
+                          expandedAnswers[index] ? 'transform rotate-180' : ''
+                        }`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
                   </div>
 
-                  {/* Toggle Answer Button */}
-                  <button
-                    onClick={() => toggleAnswer(index)}
-                    className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      expandedAnswers[index]
-                        ? 'bg-primary-100 text-primary-700 hover:bg-primary-200'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  {/* Collapsible Answer Section */}
+                  <div 
+                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                      expandedAnswers[index] 
+                        ? 'max-h-96 opacity-100 collapsible-enter' 
+                        : 'max-h-0 opacity-0'
                     }`}
                   >
-                    {expandedAnswers[index] ? (
-                      <>
-                        <span className="mr-2">👁️</span>
-                        Hide Answer
-                      </>
-                    ) : (
-                      <>
-                        <span className="mr-2">💡</span>
-                        Show Answer
-                      </>
-                    )}
-                  </button>
-
-                  {/* Collapsible Answer */}
-                  {expandedAnswers[index] && (
-                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <h4 className="text-sm font-medium text-green-800 mb-2">Answer:</h4>
-                      <p className="text-green-700 leading-relaxed">{question.answer}</p>
+                    <div className="px-6 pb-6">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 shadow-inner">
+                        <div className="flex items-center mb-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                            </svg>
+                          </div>
+                          <h4 className="text-sm font-semibold text-green-800">Answer:</h4>
+                        </div>
+                        <p className="text-green-700 leading-relaxed ml-11">{question.answer}</p>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>

@@ -77,7 +77,8 @@ const appReducer = (state, action) => {
         userExpertise: action.payload.user?.expertise || state.userExpertise,
         // Clear previous AI response to trigger re-analysis
         aiResponse: null,
-        loading: false,
+        // Set loading to indicate analysis is being updated
+        loading: true,
         error: null,
       };
     case ActionTypes.TRIGGER_REANALYSIS:
@@ -198,17 +199,34 @@ export const AppProvider = ({ children }) => {
 
   // Auto re-analyze when skills change significantly
   const autoReanalyze = async (newSkills, newExpertise) => {
-    if (newSkills && newExpertise && (newSkills !== state.userSkills || newExpertise !== state.userExpertise)) {
-      try {
-        setLoading(true);
-        const response = await careerAPI.analyzeCareer(newSkills, newExpertise);
-        setAIResponse(response);
-        setSkills(newSkills);
-        setExpertise(newExpertise);
-      } catch (error) {
-        console.error('Auto re-analysis failed:', error);
-        setError(error.message || 'Failed to update analysis');
-      }
+    if (!newSkills || !newExpertise) {
+      console.warn('Missing skills or expertise for auto re-analysis');
+      return;
+    }
+    
+    try {
+      console.log('AppContext: Starting auto re-analysis with skills:', newSkills);
+      setLoading(true);
+      
+      const response = await careerAPI.analyzeCareer(newSkills, newExpertise);
+      
+      // Update all relevant state
+      setAIResponse(response);
+      setSkills(newSkills);
+      setExpertise(newExpertise);
+      
+      console.log('AppContext: Auto re-analysis completed successfully');
+      console.log('Updated career paths:', response.career_paths?.length || 0);
+      console.log('Updated roadmap steps:', response.roadmap?.length || 0);
+      console.log('Updated courses:', response.courses?.length || 0);
+      
+      return response;
+    } catch (error) {
+      console.error('AppContext: Auto re-analysis failed:', error);
+      setError(error.message || 'Failed to update career analysis');
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 

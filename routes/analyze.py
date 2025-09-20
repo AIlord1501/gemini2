@@ -4,10 +4,10 @@ from services.ai_service import AIService
 from dependencies import get_current_user
 from typing import Optional
 
-router = APIRouter(prefix="/analyze", tags=["analyze"])
+router = APIRouter(tags=["analyze"])
 ai_service = AIService()
 
-@router.post("", response_model=AnalyzeResponse)
+@router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_career_paths(
     request: AnalyzeRequest,
     current_user: Optional[User] = Depends(get_current_user)

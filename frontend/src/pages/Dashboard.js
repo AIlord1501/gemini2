@@ -3,7 +3,26 @@ import { Link } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 
 const Dashboard = () => {
-  const { userSkills, userExpertise, aiResponse, error } = useAppContext();
+  const { userSkills, userExpertise, aiResponse, error, loading } = useAppContext();
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Updating Your Analysis</h1>
+            <p className="text-gray-600">
+              I'm analyzing your updated skills and refreshing your career recommendations...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

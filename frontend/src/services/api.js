@@ -53,22 +53,25 @@ api.interceptors.request.use(
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    console.log(`Response received from ${response.config.url}:`, response.status);
+    console.log(`✅ Response received from ${response.config.url}:`, response.status);
     return response;
   },
   (error) => {
-    console.error('Response error:', error);
+    console.error('❌ Response error:', error);
     
     // Handle different error types
     if (error.response) {
       // Server responded with error status
       const message = error.response.data?.detail || error.response.data?.message || 'Server error';
+      console.error(`Server Error (${error.response.status}):`, message);
       throw new Error(`Server Error: ${message}`);
     } else if (error.request) {
       // Request was made but no response received
-      throw new Error('Network Error: Unable to connect to server');
+      console.error('Network Error: No response received', error.request);
+      throw new Error('Network Error: Unable to connect to server. Please check if the backend is running.');
     } else {
       // Something else happened
+      console.error('Request Error:', error.message);
       throw new Error(`Request Error: ${error.message}`);
     }
   }
@@ -79,13 +82,28 @@ export const careerAPI = {
   // Analyze career paths
   analyzeCareer: async (skills, expertise) => {
     try {
-      const response = await api.post('/analyze', {
-        skills,
-        expertise,
-      });
+      console.log('analyzeCareer called with:', { skills, expertise });
+      console.log('API base URL:', api.defaults.baseURL);
+      
+      const requestData = { skills, expertise };
+      console.log('Making POST request to /analyze with data:', requestData);
+      
+      const response = await api.post('/analyze', requestData);
+      console.log('analyzeCareer response status:', response.status);
+      console.log('analyzeCareer response data:', response.data);
+      
+      if (!response.data) {
+        throw new Error('Empty response from server');
+      }
+      
       return response.data;
     } catch (error) {
-      console.error('Career analysis error:', error);
+      console.error('analyzeCareer error details:', {
+        message: error.message,
+        response: error.response,
+        request: error.request,
+        config: error.config
+      });
       throw error;
     }
   },

@@ -23,8 +23,16 @@ class Settings:
     # Google Cloud Configuration
     GOOGLE_CLOUD_PROJECT: str = os.getenv("GOOGLE_CLOUD_PROJECT", "your-project-id")
     
+    # Firestore Configuration
+    FIRESTORE_DATABASE: str = os.getenv("FIRESTORE_DATABASE", "(default)")
+    
     # AI Configuration
     AI_MODEL_NAME: str = "gemini-1.0-pro"
+    
+    # Authentication Configuration
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # Logging Configuration
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

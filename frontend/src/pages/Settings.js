@@ -1,281 +1,185 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { careerAPI } from '../services/api';
+import { Link } from 'react-router-dom';
 
 const Settings = () => {
-  const { 
-    userSkills, 
-    userExpertise, 
-    setSkills, 
-    setExpertise, 
-    setAIResponse, 
-    setLoading, 
-    setError, 
-    clearData,
-    loading 
-  } = useAppContext();
-  
-  const [isEditing, setIsEditing] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { user, setUser, isAuthenticated, setLoading, setError, loading, error } = useAppContext();
   const [formData, setFormData] = useState({
-    skills: userSkills,
-    expertise: userExpertise,
+    full_name: '',
+    skills: '',
+    expertise: '',
   });
+  const [saveMessage, setSaveMessage] = useState('');
 
-  // Load dark mode from localStorage on component mount
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    setIsDarkMode(savedDarkMode);
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark');
+    if (user) {
+      setFormData({
+        full_name: user.full_name || '',
+        skills: user.skills || '',
+        expertise: user.expertise || '',
+      });
     }
-  }, []);
+  }, [user]);
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', newDarkMode.toString());
-    
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSaveMessage('');
 
-  const handleSave = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Update context with new data
-      setSkills(formData.skills);
-      setExpertise(formData.expertise);
-      
-      // Call API to get new analysis
-      const response = await careerAPI.analyzeCareer(formData.skills, formData.expertise);
-      setAIResponse(response);
-      
-      setIsEditing(false);
-    } catch (error) {
-      setError(error.message);
+      const updatedUser = await careerAPI.updateMe(formData);
+      setUser(updatedUser);
+      setSaveMessage('Profile updated successfully!');
+      setTimeout(() => setSaveMessage(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    setFormData({
-      skills: userSkills,
-      expertise: userExpertise,
-    });
-    setIsEditing(false);
-  };
-
-  const handleClearData = () => {
-    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
-      clearData();
-    }
-  };
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Settings</h1>
+            <p className="text-gray-600 mb-8">
+              Please log in to access your settings.
+            </p>
+            <Link
+              to="/auth"
+              className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Login / Register
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage your profile and application preferences</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Profile Settings</h1>
+          <p className="text-xl text-gray-600">
+            Manage your profile information and preferences.
+          </p>
         </div>
 
-        <div className="space-y-8">
-          {/* Profile Information */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Profile Information</h2>
-                {!isEditing && (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-                  >
-                    Edit Profile
-                  </button>
+        {/* Profile Form */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Update Profile</h2>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-red-700">{error}</p>
+            </div>
+          )}
+
+          {saveMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-green-700">{saveMessage}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="full_name"
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                placeholder="Enter your full name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
+                Skills
+              </label>
+              <textarea
+                id="skills"
+                name="skills"
+                value={formData.skills}
+                onChange={handleChange}
+                rows="4"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                placeholder="e.g., JavaScript, Python, React, Data Analysis, Project Management..."
+              />
+            </div>
+
+            <div>
+              <label htmlFor="expertise" className="block text-sm font-medium text-gray-700 mb-2">
+                Expertise Level
+              </label>
+              <select
+                id="expertise"
+                name="expertise"
+                value={formData.expertise}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              >
+                <option value="">Select your level</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Expert">Expert</option>
+              </select>
+            </div>
+
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
+                  loading
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-primary-600 text-white hover:bg-primary-700 hover:shadow-lg transform hover:-translate-y-0.5'
+                }`}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </div>
+                ) : (
+                  'Save Changes'
                 )}
-              </div>
+              </button>
             </div>
-            
-            <div className="p-6">
-              {isEditing ? (
-                <div className="space-y-6">
-                  <div>
-                    <label htmlFor="skills" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Your Skills
-                    </label>
-                    <textarea
-                      id="skills"
-                      name="skills"
-                      rows={4}
-                      value={formData.skills}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="expertise" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Your Experience & Expertise
-                    </label>
-                    <textarea
-                      id="expertise"
-                      name="expertise"
-                      rows={4}
-                      value={formData.expertise}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  
-                  <div className="flex gap-4">
-                    <button
-                      onClick={handleSave}
-                      disabled={loading}
-                      className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-6 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Skills</label>
-                    <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">{userSkills || 'No skills specified'}</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Experience & Expertise</label>
-                    <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">{userExpertise || 'No expertise specified'}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          </form>
 
-          {/* Application Settings */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Application Settings</h2>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">API Endpoint</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Backend server URL for career analysis</p>
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {process.env.REACT_APP_API_URL || 'http://localhost:8000'}
-                </div>
+          {/* Account Information */}
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="text-sm font-medium text-gray-500">Email:</span>
+                <p className="text-gray-700">{user?.email}</p>
               </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Dark Mode</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Toggle between light and dark themes</p>
-                </div>
-                <button
-                  onClick={toggleDarkMode}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                    isDarkMode ? 'bg-primary-600' : 'bg-gray-200'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      isDarkMode ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Receive updates about new features</p>
-                </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Enabled</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Data Management */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Data Management</h2>
-            </div>
-            
-            <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Clear All Data</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Remove all stored information and start fresh</p>
-                </div>
-                <button
-                  onClick={handleClearData}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Clear Data
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Export Data</h3>
-                  <p className="text-gray-600 dark:text-gray-400">Download your career analysis data</p>
-                </div>
-                <button
-                  disabled
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded-lg cursor-not-allowed"
-                >
-                  Export (Coming Soon)
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* About */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">About</h2>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 dark:text-gray-300">Version</span>
-                <span className="text-gray-900 dark:text-white font-medium">1.0.0</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 dark:text-gray-300">Last Updated</span>
-                <span className="text-gray-900 dark:text-white font-medium">Today</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 dark:text-gray-300">AI Model</span>
-                <span className="text-gray-900 dark:text-white font-medium">Gemini 1.0 Pro</span>
+              <div>
+                <span className="text-sm font-medium text-gray-500">Member Since:</span>
+                <p className="text-gray-700">
+                  {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                </p>
               </div>
             </div>
           </div>

@@ -1,10 +1,14 @@
-import React, { createContext, useContext, useReducer } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { careerAPI, tokenManager } from '../services/api';
 
 // Initial state
 const initialState = {
   userSkills: '',
   userExpertise: '',
   aiResponse: null,
+  mockTest: null,
+  user: null,
+  isAuthenticated: false,
   loading: false,
   error: null,
 };
@@ -14,9 +18,13 @@ const ActionTypes = {
   SET_SKILLS: 'SET_SKILLS',
   SET_EXPERTISE: 'SET_EXPERTISE',
   SET_AI_RESPONSE: 'SET_AI_RESPONSE',
+  SET_MOCK_TEST: 'SET_MOCK_TEST',
+  SET_USER: 'SET_USER',
+  SET_AUTHENTICATED: 'SET_AUTHENTICATED',
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR',
   CLEAR_DATA: 'CLEAR_DATA',
+  LOGOUT: 'LOGOUT',
 };
 
 // Reducer function
@@ -40,6 +48,32 @@ const appReducer = (state, action) => {
         aiResponse: action.payload,
         loading: false,
         error: null,
+      };
+    case ActionTypes.SET_MOCK_TEST:
+      return {
+        ...state,
+        mockTest: action.payload,
+        loading: false,
+        error: null,
+      };
+    case ActionTypes.SET_USER:
+      return {
+        ...state,
+        user: action.payload,
+        isAuthenticated: !!action.payload,
+        loading: false,
+        error: null,
+      };
+    case ActionTypes.SET_AUTHENTICATED:
+      return {
+        ...state,
+        isAuthenticated: action.payload,
+        loading: false,
+        error: null,
+      };
+    case ActionTypes.LOGOUT:
+      return {
+        ...initialState,
       };
     case ActionTypes.SET_LOADING:
       return {
@@ -69,6 +103,25 @@ const AppContext = createContext();
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  // Initialize user on app start
+  useEffect(() => {
+    const initializeUser = async () => {
+      const token = tokenManager.getToken();
+      if (token) {
+        try {
+          const user = await careerAPI.getMe();
+          setUser(user);
+        } catch (error) {
+          console.error('Failed to get user:', error);
+          // Token might be expired, remove it
+          tokenManager.removeToken();
+        }
+      }
+    };
+
+    initializeUser();
+  }, []);
+
   // Action creators
   const setSkills = (skills) => {
     dispatch({ type: ActionTypes.SET_SKILLS, payload: skills });
@@ -80,6 +133,22 @@ export const AppProvider = ({ children }) => {
 
   const setAIResponse = (response) => {
     dispatch({ type: ActionTypes.SET_AI_RESPONSE, payload: response });
+  };
+
+  const setMockTest = (mockTest) => {
+    dispatch({ type: ActionTypes.SET_MOCK_TEST, payload: mockTest });
+  };
+
+  const setUser = (user) => {
+    dispatch({ type: ActionTypes.SET_USER, payload: user });
+  };
+
+  const setAuthenticated = (isAuthenticated) => {
+    dispatch({ type: ActionTypes.SET_AUTHENTICATED, payload: isAuthenticated });
+  };
+
+  const logout = () => {
+    dispatch({ type: ActionTypes.LOGOUT });
   };
 
   const setLoading = (loading) => {
@@ -99,9 +168,13 @@ export const AppProvider = ({ children }) => {
     setSkills,
     setExpertise,
     setAIResponse,
+    setMockTest,
+    setUser,
+    setAuthenticated,
     setLoading,
     setError,
     clearData,
+    logout,
   };
 
   return (

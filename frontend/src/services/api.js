@@ -1,5 +1,34 @@
 import axios from 'axios';
 
+// Token management
+const TOKEN_KEY = 'career_analyzer_token';
+
+export const tokenManager = {
+  setToken: (token) => {
+    localStorage.setItem(TOKEN_KEY, token);
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  },
+  
+  getToken: () => {
+    return localStorage.getItem(TOKEN_KEY);
+  },
+  
+  removeToken: () => {
+    localStorage.removeItem(TOKEN_KEY);
+    delete api.defaults.headers.common['Authorization'];
+  },
+  
+  initializeToken: () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+  }
+};
+
+// Initialize token on import
+tokenManager.initializeToken();
+
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: 'http://127.0.0.1:8000',
@@ -72,6 +101,69 @@ export const careerAPI = {
     }
   },
 
+  // Generate mock test
+  generateMockTest: async (skills, expertise, topic = null, userId = null) => {
+    try {
+      const requestData = {
+        skills,
+        expertise,
+      };
+      
+      if (topic) {
+        requestData.topic = topic;
+      }
+      
+      const response = await api.post('/mock-test', requestData, {
+        params: userId ? { user_id: userId } : {},
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Mock test generation error:', error);
+      throw error;
+    }
+  },
+
+  // Authentication endpoints
+  register: async (userData) => {
+    try {
+      const response = await api.post('/auth/register', userData);
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  },
+
+  login: async (credentials) => {
+    try {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  },
+
+  getMe: async () => {
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error) {
+      console.error('Get user error:', error);
+      throw error;
+    }
+  },
+
+  updateMe: async (userData) => {
+    try {
+      const response = await api.put('/auth/me', userData);
+      return response.data;
+    } catch (error) {
+      console.error('Update user error:', error);
+      throw error;
+    }
+  },
+
   // Root endpoint
   getRoot: async () => {
     try {
@@ -94,6 +186,28 @@ export const analyzeCareer = async (skills, expertise) => {
     return response.data;
   } catch (error) {
     console.error('Career analysis error:', error);
+    throw error;
+  }
+};
+
+// Export the generateMockTest function directly for convenience
+export const generateMockTest = async (skills, expertise, topic = null, userId = null) => {
+  try {
+    const requestData = {
+      skills,
+      expertise,
+    };
+    
+    if (topic) {
+      requestData.topic = topic;
+    }
+    
+    const response = await api.post('/mock-test', requestData, {
+      params: userId ? { user_id: userId } : {},
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Mock test generation error:', error);
     throw error;
   }
 };

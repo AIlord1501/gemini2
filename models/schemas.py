@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+from datetime import datetime
 
 class AnalyzeRequest(BaseModel):
     """Request model for career analysis"""
@@ -45,3 +46,61 @@ class HealthResponse(BaseModel):
 class RootResponse(BaseModel):
     """Root endpoint response"""
     message: str
+
+class MockTestRequest(BaseModel):
+    """Request model for mock test generation"""
+    skills: str
+    expertise: str
+    topic: Optional[str] = None
+
+class MockTestQuestion(BaseModel):
+    """Mock test question model"""
+    question: str
+    answer: str
+
+class MockTestResponse(BaseModel):
+    """Mock test response model"""
+    test_id: str
+    questions: List[MockTestQuestion]
+    user_id: Optional[str] = None
+    created_at: str
+
+# User Authentication Models
+class UserCreate(BaseModel):
+    """User creation request"""
+    email: EmailStr
+    password: str
+    full_name: str
+    skills: Optional[str] = None
+    expertise: Optional[str] = None
+
+class UserLogin(BaseModel):
+    """User login request"""
+    email: EmailStr
+    password: str
+
+class UserUpdate(BaseModel):
+    """User update request"""
+    full_name: Optional[str] = None
+    skills: Optional[str] = None
+    expertise: Optional[str] = None
+
+class User(BaseModel):
+    """User response model"""
+    id: str
+    email: str
+    full_name: str
+    skills: Optional[str] = None
+    expertise: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+class Token(BaseModel):
+    """JWT token response"""
+    access_token: str
+    token_type: str
+    user: User
+
+class TokenData(BaseModel):
+    """Token data for validation"""
+    email: Optional[str] = None

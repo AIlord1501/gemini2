@@ -1,9 +1,11 @@
 import json
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
+from datetime import datetime
 from google.cloud import aiplatform
+from google.cloud import firestore
 from vertexai.generative_models import GenerativeModel
-from models.schemas import CareerPath, Course, RoadmapStep
+from models.schemas import CareerPath, Course, RoadmapStep, MockTestQuestion
 
 class AIService:
     """Service for handling AI-related operations using Vertex AI"""
@@ -13,6 +15,13 @@ class AIService:
         self.project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "your-project-id")
         aiplatform.init(project=self.project_id)
         self.model = GenerativeModel("gemini-1.0-pro")
+        
+        # Initialize Firestore client with error handling
+        try:
+            self.firestore_client = firestore.Client(project=self.project_id)
+        except Exception as e:
+            print(f"Warning: Could not initialize Firestore client: {e}")
+            self.firestore_client = None
     
     def generate_career_analysis(self, skills: str, expertise: str) -> Dict[str, Any]:
         """Generate career analysis using Vertex AI Gemini model"""
@@ -194,3 +203,103 @@ class AIService:
                 }
             ]
         }
+
+    def generate_mock_test(self, skills: str, expertise: str, topic: str = None, user_id: str = None) -> Dict[str, Any]:
+        """Generate a mock test using Vertex AI Gemini model and save to Firestore"""
+        
+        # Build the prompt
+        topic_text = f" focusing on {topic}" if topic else ""
+        prompt = f"""
+        Generate a 5-question mock test for a user with skills {skills} and expertise {expertise}{topic_text}.
+        Include questions and answers in JSON format:
+        [
+          {{"question": "...", "answer": "..."}},
+          {{"question": "...", "answer": "..."}},
+          {{"question": "...", "answer": "..."}},
+          {{"question": "...", "answer": "..."}},
+          {{"question": "...", "answer": "..."}}
+        ]
+        
+        Make the questions challenging but appropriate for the specified skill level.
+        Provide detailed answers that explain the concepts.
+        """
+
+        try:
+            response = self.model.generate_content(prompt)
+            response_text = response.text
+            
+            # Try to find JSON in the response
+            start_idx = response_text.find('[')
+            end_idx = response_text.rfind(']') + 1
+            
+            if start_idx != -1 and end_idx != -1:
+                json_str = response_text[start_idx:end_idx]
+                questions_data = json.loads(json_str)
+                
+                # Convert to MockTestQuestion objects
+                questions = [MockTestQuestion(**q) for q in questions_data]
+            else:
+                # Fallback questions
+                questions = self._create_fallback_test(skills, expertise)
+                
+        except Exception as e:
+            print(f"Error generating mock test: {e}")
+            questions = self._create_fallback_test(skills, expertise)
+        
+        # Generate test ID
+        test_id = f"test_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(skills + expertise) % 10000}"
+        
+        # Save to Firestore
+        test_data = {
+            "test_id": test_id,
+            "skills": skills,
+            "expertise": expertise,
+            "topic": topic,
+            "user_id": user_id,
+            "questions": [q.dict() for q in questions],
+            "created_at": datetime.now().isoformat(),
+            "timestamp": firestore.SERVER_TIMESTAMP
+        }
+        
+        try:
+            # Save to Firestore if client is available
+            if self.firestore_client:
+                doc_ref = self.firestore_client.collection('mock_tests').document(test_id)
+                doc_ref.set(test_data)
+                print(f"Mock test saved to Firestore with ID: {test_id}")
+            else:
+                print(f"Warning: Firestore not available. Mock test not saved: {test_id}")
+        except Exception as e:
+            print(f"Error saving to Firestore: {e}")
+        
+        return {
+            "test_id": test_id,
+            "questions": [q.dict() for q in questions],
+            "user_id": user_id,
+            "created_at": test_data["created_at"]
+        }
+    
+    def _create_fallback_test(self, skills: str, expertise: str) -> List[MockTestQuestion]:
+        """Create fallback mock test questions when AI generation fails"""
+        return [
+            MockTestQuestion(
+                question="What is the most important aspect of software development lifecycle?",
+                answer="The most important aspect is understanding requirements clearly and maintaining good communication with stakeholders throughout the process."
+            ),
+            MockTestQuestion(
+                question="How do you handle debugging complex issues in your code?",
+                answer="Start by reproducing the issue, use debugging tools, add logging, break down the problem into smaller parts, and systematically test hypotheses."
+            ),
+            MockTestQuestion(
+                question="What strategies do you use for continuous learning in technology?",
+                answer="Read documentation, follow industry blogs, participate in online communities, work on side projects, and attend conferences or webinars."
+            ),
+            MockTestQuestion(
+                question="How do you ensure code quality in your projects?",
+                answer="Use code reviews, write unit tests, follow coding standards, use static analysis tools, and implement CI/CD pipelines."
+            ),
+            MockTestQuestion(
+                question="What approach do you take when learning a new technology?",
+                answer="Start with official documentation, build small projects, join communities, find mentors, and practice regularly with real-world scenarios."
+            )
+        ]

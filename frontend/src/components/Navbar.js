@@ -1,8 +1,18 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAppContext } from '../context/AppContext';
+import { tokenManager } from '../services/api';
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAppContext();
+
+  const handleLogout = () => {
+    tokenManager.removeToken();
+    logout();
+    navigate('/');
+  };
 
   const navItems = [
     { path: '/', label: 'Landing', icon: '🏠' },
@@ -10,6 +20,7 @@ const Navbar = () => {
     { path: '/career-path', label: 'Career Path', icon: '🎯' },
     { path: '/roadmap', label: 'Roadmap', icon: '🗺️' },
     { path: '/courses', label: 'Courses', icon: '📚' },
+    { path: '/mock-test', label: 'Mock Test', icon: '📝' },
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];
 
@@ -49,6 +60,28 @@ const Navbar = () => {
                 </Link>
               ))}
             </div>
+          </div>
+
+          {/* User actions */}
+          <div className="hidden sm:flex sm:items-center sm:space-x-4">
+            {isAuthenticated ? (
+              <>
+                <span className="text-gray-700">Welcome, {user?.full_name || user?.email}</span>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/auth"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+              >
+                Login / Register
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
